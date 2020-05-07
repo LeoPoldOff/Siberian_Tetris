@@ -2,6 +2,55 @@
 
 .data
 output_msg      db      '     '
+table_figures:
+	rotate_straight:
+		figure_square	dw	0cc00h
+		figure_dot 		dw	08000h
+		figure_2dots	dw	0c000h
+		figure_3dots	dw 	0e000h
+		figure_triangle	dw	0c800h
+		figure_g 		dw	0c880h
+		figure_backg	dw	0c440h
+		figure_pyramid	dw	04e00h
+		figure_s 		dw	06c00h
+		figure_backs	dw	0c600h
+		figure_4dots	dw	0f000h
+	rotate_right:
+		right_figure_square		dw	0cc00h
+		right_figure_dot 		dw	08000h
+		right_figure_2dots		dw	08800h
+		right_figure_3dots		dw 	08880h
+		right_figure_triangle	dw	0c400h
+		right_figure_g 			dw	0e200h
+		right_figure_backg		dw	02e00h
+		right_figure_pyramid	dw	08c80h
+		right_figure_s 			dw	08c40h
+		right_figure_backs		dw	04c80h
+		right_figure_4dots		dw	08888h
+	rotate_overturned:
+		overturned_figure_square	dw	0cc00h
+		overturned_figure_dot 		dw	08000h
+		overturned_figure_2dots		dw	0c000h
+		overturned_figure_3dots		dw 	0e000h
+		overturned_figure_triangle	dw	04c00h
+		overturned_figure_g 		dw	044c0h
+		overturned_figure_backg		dw	088c0h
+		overturned_figure_pyramid	dw	0e400h
+		overturned_figure_s 		dw	06c00h
+		overturned_figure_backs		dw	0c600h
+		overturned_figure_4dots		dw	0f000h
+	rotate_left:
+		left_figure_square		dw	0cc00h
+		left_figure_dot 		dw	08000h
+		left_figure_2dots		dw	08800h
+		left_figure_3dots		dw 	08880h
+		left_figure_triangle	dw	08c00h
+		left_figure_g 			dw	08e00h
+		left_figure_backg		dw	00e800h
+		left_figure_pyramid		dw	04c40h
+		left_figure_s 			dw	08c40h
+		left_figure_backs		dw	04c80h
+		left_figure_4dots		dw	08888h
 
 .code
 org 100h
@@ -259,7 +308,7 @@ begin proc near
 	mov al, 03h
 	int 10h
 	xor	ax, ax
-	mov ax, 608 ; task for num2buf
+	mov ax, 608
 	call num2buf
 	call print_string
 @@2:
