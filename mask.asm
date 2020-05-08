@@ -4,37 +4,37 @@
 .data
 output_msg      db      '     '
 game_field:
-	str1	dw		0000h
-	str2	dw		0000h
-	str3	dw		0000h
-	str4 	dw		0000h
-	str5	dw		0000h
-	str6	dw		0000h
-	str7	dw		0000h
-	str8	dw		0000h
-	str9	dw		0000h
-	str10	dw		0000h
-	str11	dw		0000h
-	str12	dw		0000h
-	str13	dw		0000h
-	str14	dw		0000h
-	str15	dw		0000h
-	str16	dw		0000h
-	str17	dw		0000h
-	str18	dw		0000h
-	str19	dw		0000h
-	str20	dw		0000h
-	str21 	dw		0000h
-	str22	dw		0000h
-	str23	dw		0000h
-	str24	dw		0000h
-	str25	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0012h
 
 current_position:
-		dw		0000h
-		dw		0000h
-		dw		0000h
-		dw		0000h
+		dw		1234h
+		dw		5678h
+		dw		9012h
+		dw		3456h
 	
 saved_position:
 		dw		0000h
@@ -101,63 +101,60 @@ org 100h
 _start:
 jmp begin
 
-clear_screen proc near
+saved_configuration proc near ; transport current position & configuration
+	push ax						;to saved position and configuration
+	push bx
+
+	lea bx, current_position
+
+	mov ax, [bx]
+	lea bx, saved_position
+	mov [bx], ax
+	lea bx, current_position
+
+	mov ax, [bx + 2]
+	lea bx, saved_position
+	mov [bx + 2], ax
+	lea bx, current_position
+
+	mov ax, [bx + 4]
+	lea bx, saved_position
+	mov [bx + 4], ax
+	lea bx, current_position
+
+	mov ax, [bx + 6]
+	lea bx, saved_position
+	mov [bx + 6], ax
+	lea bx, current_position
+
+	lea bx, current_rotate
+	mov ax, [bx]
+	lea bx, saved_rotate
+	mov [bx], ax
+
+	pop bx
+	pop ax
+	ret
+saved_configuration endp
+
+clear_screen proc near ; clean game_field
 	push ax
+	push bx
+	push cx
 	push si
 
+	lea bx, game_field
 	mov ax, 0000h
-	mov si, offset str1
-	mov	[si], ax
-	mov si, offset str2
-	mov	[si], ax
-	mov si, offset str3
-	mov	[si], ax
-	mov si, offset str4
-	mov	[si], ax
-	mov si, offset str5
-	mov	[si], ax
-	mov si, offset str6
-	mov	[si], ax
-	mov si, offset str7
-	mov	[si], ax
-	mov si, offset str8
-	mov	[si], ax
-	mov si, offset str9
-	mov	[si], ax
-	mov si, offset str10
-	mov	[si], ax
-	mov si, offset str11
-	mov	[si], ax
-	mov si, offset str12
-	mov	[si], ax
-	mov si, offset str13
-	mov	[si], ax
-	mov si, offset str14
-	mov	[si], ax
-	mov si, offset str15
-	mov	[si], ax
-	mov si, offset str16
-	mov	[si], ax
-	mov si, offset str17
-	mov	[si], ax
-	mov si, offset str18
-	mov	[si], ax
-	mov si, offset str19
-	mov	[si], ax
-	mov si, offset str20
-	mov	[si], ax
-	mov si, offset str21
-	mov	[si], ax
-	mov si, offset str22
-	mov	[si], ax
-	mov si, offset str23
-	mov	[si], ax
-	mov si, offset str24
-	mov	[si], ax
-	mov si, offset str25
-	mov	[si], ax
+	mov cx, 25
+
+	clearLoop:
+		mov [bx], ax
+		add bx, 2
+		loop clearLoop
 
 	pop si
+	pop cx
+	pop bx
 	pop ax
 	ret
 clear_screen endp
@@ -585,7 +582,7 @@ begin proc near
 	mov al, 03h
 	int 10h
 	xor	ax, ax
-	call clear_screen
+	call saved_configuration
 @@2:
 	xor	ah,ah
 	int	16h
