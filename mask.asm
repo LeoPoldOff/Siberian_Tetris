@@ -4,31 +4,31 @@
 .data
 output_msg      db      '     '
 game_field:
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
-	dw		0000h
+	str1	dw		0000h
+	str2	dw		0000h
+	str3	dw		0000h
+	str4 	dw		0000h
+	str5	dw		0000h
+	str6	dw		0000h
+	str7	dw		0000h
+	str8	dw		0000h
+	str9	dw		0000h
+	str10	dw		0000h
+	str11	dw		0000h
+	str12	dw		0000h
+	str13	dw		0000h
+	str14	dw		0000h
+	str15	dw		0000h
+	str16	dw		0000h
+	str17	dw		0000h
+	str18	dw		0000h
+	str19	dw		0000h
+	str20	dw		0000h
+	str21 	dw		0000h
+	str22	dw		0000h
+	str23	dw		0000h
+	str24	dw		0000h
+	str25	dw		0000h
 
 current_position:
 		dw		0000h
@@ -100,6 +100,67 @@ table_figures:
 org 100h
 _start:
 jmp begin
+
+clear_screen proc near
+	push ax
+	push si
+
+	mov ax, 0000h
+	mov si, offset str1
+	mov	[si], ax
+	mov si, offset str2
+	mov	[si], ax
+	mov si, offset str3
+	mov	[si], ax
+	mov si, offset str4
+	mov	[si], ax
+	mov si, offset str5
+	mov	[si], ax
+	mov si, offset str6
+	mov	[si], ax
+	mov si, offset str7
+	mov	[si], ax
+	mov si, offset str8
+	mov	[si], ax
+	mov si, offset str9
+	mov	[si], ax
+	mov si, offset str10
+	mov	[si], ax
+	mov si, offset str11
+	mov	[si], ax
+	mov si, offset str12
+	mov	[si], ax
+	mov si, offset str13
+	mov	[si], ax
+	mov si, offset str14
+	mov	[si], ax
+	mov si, offset str15
+	mov	[si], ax
+	mov si, offset str16
+	mov	[si], ax
+	mov si, offset str17
+	mov	[si], ax
+	mov si, offset str18
+	mov	[si], ax
+	mov si, offset str19
+	mov	[si], ax
+	mov si, offset str20
+	mov	[si], ax
+	mov si, offset str21
+	mov	[si], ax
+	mov si, offset str22
+	mov	[si], ax
+	mov si, offset str23
+	mov	[si], ax
+	mov si, offset str24
+	mov	[si], ax
+	mov si, offset str25
+	mov	[si], ax
+
+	pop si
+	pop ax
+	ret
+clear_screen endp
 
 calculate_configuration proc near	
 ; figure num in ax, rotate in buf current_rotate, res(start byte of configuration) in ax
@@ -524,9 +585,7 @@ begin proc near
 	mov al, 03h
 	int 10h
 	xor	ax, ax
-	call calculate_configuration
-	mov si, ax
-	call print_string
+	call clear_screen
 @@2:
 	xor	ah,ah
 	int	16h
