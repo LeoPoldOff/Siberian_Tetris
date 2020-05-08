@@ -31,20 +31,20 @@ game_field:
 	dw		0012h
 
 current_position:
-		dw		1234h
-		dw		5678h
-		dw		9012h
-		dw		3456h
+		dw		1111h
+		dw		2222h
+		dw		3333h
+		dw		4444h
 	
 saved_position:
-		dw		0000h
-		dw		0000h
-		dw		0000h
-		dw		0000h
+		dw		9999h
+		dw		8888h
+		dw		7777h
+		dw		5555h
 
-current_rotate	db		3
+current_rotate	dw		4 ;1-straight, 2-right, 3-overturned, 4-left
 		
-saved_rotate	db		0
+saved_rotate	dw		2
 
 table_figures:
 	rotate_straight:
@@ -101,6 +101,52 @@ org 100h
 _start:
 jmp begin
 
+restore_configuration proc near	; transport saved position & configuration
+	push ax						;to current position and configuration
+	push bx
+
+	lea bx, saved_position
+
+	mov ax, [bx]
+	lea bx, current_position
+	mov [bx], ax
+	lea bx, saved_position
+
+	mov ax, [bx + 2]
+	lea bx, current_position
+	mov [bx + 2], ax
+	lea bx, saved_position
+
+	mov ax, [bx + 4]
+	lea bx, current_position
+	mov [bx + 4], ax
+	lea bx, saved_position
+
+	mov ax, [bx + 6]
+	lea bx, current_position
+	mov [bx + 6], ax
+	lea bx, saved_position
+
+	lea bx, saved_rotate
+	mov ax, [bx]
+	lea bx, current_rotate
+	mov [bx], ax
+
+	; lea bx, current_position
+	; mov ax, [bx]
+	; mov ax, [bx + 2]
+	; mov ax, [bx + 4]
+	; mov ax, [bx + 6]
+
+	; lea bx, current_rotate
+	; mov ax, [bx]
+
+
+	pop bx
+	pop ax
+	ret
+restore_configuration endp
+
 saved_configuration proc near ; transport current position & configuration
 	push ax						;to saved position and configuration
 	push bx
@@ -125,12 +171,20 @@ saved_configuration proc near ; transport current position & configuration
 	mov ax, [bx + 6]
 	lea bx, saved_position
 	mov [bx + 6], ax
-	lea bx, current_position
 
 	lea bx, current_rotate
 	mov ax, [bx]
 	lea bx, saved_rotate
 	mov [bx], ax
+
+	; lea bx, saved_position
+	; mov ax, [bx]
+	; mov ax, [bx + 2]
+	; mov ax, [bx + 4]
+	; mov ax, [bx + 6]
+
+	; lea bx, saved_rotate
+	; mov ax, [bx]
 
 	pop bx
 	pop ax
@@ -582,7 +636,7 @@ begin proc near
 	mov al, 03h
 	int 10h
 	xor	ax, ax
-	call saved_configuration
+	call restore_configuration
 @@2:
 	xor	ah,ah
 	int	16h
