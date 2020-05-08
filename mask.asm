@@ -1,7 +1,51 @@
 .model tiny
+.386
 
 .data
 output_msg      db      '     '
+game_field:
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+	dw		0000h
+
+current_position:
+		dw		0000h
+		dw		0000h
+		dw		0000h
+		dw		0000h
+	
+saved_position:
+		dw		0000h
+		dw		0000h
+		dw		0000h
+		dw		0000h
+
+current_rotate	db		3
+		
+saved_rotate	db		0
+
 table_figures:
 	rotate_straight:
 		figure_square	dw	0cc00h
@@ -56,6 +100,178 @@ table_figures:
 org 100h
 _start:
 jmp begin
+
+calculate_configuration proc near	
+; figure num in ax, rotate in buf current_rotate, res(start byte of configuration) in ax
+; figure numered like in table
+	push    bx
+    push    cx
+    push 	dx
+    push    es
+    push    di
+    push    si
+    
+	mov si, offset current_rotate
+	mov bx, [si]
+	mov dx, ax
+	cmp bx, 1
+	je _up
+	cmp bx, 2
+	je _right
+	cmp bx, 3
+	je _down
+	cmp bx, 4
+	je _left
+
+_up:
+	cmp dx, 1
+	mov ax, offset figure_square
+	je _ret
+	cmp dx, 2
+	mov ax, offset figure_dot
+	je _ret
+	cmp dx, 3
+	mov ax, offset figure_2dots
+	je _ret
+	cmp dx, 4
+	mov ax, offset figure_3dots
+	je _ret
+	cmp dx, 5
+	mov ax, offset figure_triangle
+	je _ret
+	cmp dx, 6
+	mov ax, offset figure_g
+	je _ret
+	cmp dx, 7
+	mov ax, offset figure_backg
+	je _ret
+	cmp dx, 8
+	mov ax, offset figure_pyramid
+	je _ret
+	cmp dx, 9
+	mov ax, offset figure_s
+	je _ret
+	cmp dx, 10
+	mov ax, offset figure_backs
+	je _ret
+	cmp dx, 11
+	mov ax, offset figure_4dots
+	je _ret
+
+_right:
+	cmp dx, 1
+	mov ax, offset right_figure_square
+	je _ret
+	cmp dx, 2
+	mov ax, offset right_figure_dot
+	je _ret
+	cmp dx, 3
+	mov ax, offset right_figure_2dots
+	je _ret
+	cmp dx, 4
+	mov ax, offset right_figure_3dots
+	je _ret
+	cmp dx, 5
+	mov ax, offset right_figure_triangle
+	je _ret
+	cmp dx, 6
+	mov ax, offset right_figure_g
+	je _ret
+	cmp dx, 7
+	mov ax, offset right_figure_backg
+	je _ret
+	cmp dx, 8
+	mov ax, offset right_figure_pyramid
+	je _ret
+	cmp dx, 9
+	mov ax, offset right_figure_s
+	je _ret
+	cmp dx, 10
+	mov ax, offset right_figure_backs
+	je _ret
+	cmp dx, 11
+	mov ax, offset right_figure_4dots
+	je _ret
+
+_down:
+	cmp dx, 1
+	mov ax, offset overturned_figure_square
+	je _ret
+	cmp dx, 2
+	mov ax, offset overturned_figure_dot
+	je _ret
+	cmp dx, 3
+	mov ax, offset overturned_figure_2dots
+	je _ret
+	cmp dx, 4
+	mov ax, offset overturned_figure_3dots
+	je _ret
+	cmp dx, 5
+	mov ax, offset overturned_figure_triangle
+	je _ret
+	cmp dx, 6
+	mov ax, offset overturned_figure_g
+	je _ret
+	cmp dx, 7
+	mov ax, offset overturned_figure_backg
+	je _ret
+	cmp dx, 8
+	mov ax, offset overturned_figure_pyramid
+	je _ret
+	cmp dx, 9
+	mov ax, offset overturned_figure_s
+	je _ret
+	cmp dx, 10
+	mov ax, offset overturned_figure_backs
+	je _ret
+	cmp dx, 11
+	mov ax, offset overturned_figure_4dots
+	je _ret
+
+_left:
+	cmp dx, 1
+	mov ax, offset left_figure_square
+	je _ret
+	cmp dx, 2
+	mov ax, offset left_figure_dot
+	je _ret
+	cmp dx, 3
+	mov ax, offset left_figure_2dots
+	je _ret
+	cmp dx, 4
+	mov ax, offset left_figure_3dots
+	je _ret
+	cmp dx, 5
+	mov ax, offset left_figure_triangle
+	je _ret
+	cmp dx, 6
+	mov ax, offset left_figure_g
+	je _ret
+	cmp dx, 7
+	mov ax, offset left_figure_backg
+	je _ret
+	cmp dx, 8
+	mov ax, offset left_figure_pyramid
+	je _ret
+	cmp dx, 9
+	mov ax, offset left_figure_s
+	je _ret
+	cmp dx, 10
+	mov ax, offset left_figure_backs
+	je _ret
+	cmp dx, 11
+	mov ax, offset left_figure_4dots
+	je _ret
+
+_ret:
+	pop     si
+    pop     di
+    pop     es
+    pop		dx
+    pop     cx
+    pop		bx
+	ret
+calculate_configuration endp
 
 print_mask proc near
 	push ax
@@ -231,14 +447,14 @@ print_string                proc near
     push    cx
     push    es
     push    di
-    push    si
+    ; push    si
 
     mov     ax,     0b800h
     mov     es,     ax
     mov     di,     660
     xor     ax,     ax
-    mov     cx,     5
-    mov     si,     offset output_msg
+    mov     cx,     4
+    ; mov     si,     offset output_msg
     ; mov	[si + 1],	dl	
 
     loop_1:
@@ -308,8 +524,8 @@ begin proc near
 	mov al, 03h
 	int 10h
 	xor	ax, ax
-	mov ax, 608
-	call num2buf
+	call calculate_configuration
+	mov si, ax
 	call print_string
 @@2:
 	xor	ah,ah
