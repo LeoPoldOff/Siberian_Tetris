@@ -31,10 +31,10 @@ game_field:
 	dw		0012h
 
 current_position:
-		dw		1111h
-		dw		2222h
-		dw		3333h
-		dw		4444h
+		dw		0228h
+		dw		0207h
+		dw		0116h
+		dw		0155h
 	
 saved_position:
 		dw		9999h
@@ -42,9 +42,9 @@ saved_position:
 		dw		7777h
 		dw		5555h
 
-current_rotate	dw		4 ;1-straight, 2-right, 3-overturned, 4-left
+current_rotate	dw		4 ; 1-straight, 2-right, 3-overturned, 4-left
 		
-saved_rotate	dw		2
+saved_rotate	dw		2 ; 1-straight, 2-right, 3-overturned, 4-left
 
 table_figures:
 	rotate_straight:
@@ -101,45 +101,168 @@ org 100h
 _start:
 jmp begin
 
+get_position proc near ; res, coordinates of up left corner of current_position, in ax
+	push bx
+	push cx
+	push dx
+
+	lea bx, current_position ; link to current_position
+	mov ax, [bx]
+	xor dx, dx
+	mov cx, 10h ; to have column in dx, str in ax
+	div cx
+	push ax
+	push dx
+
+	mov ax, [bx + 2] ; second element of current_position to ax
+	xor dx, dx
+	mov cx, 10h ; to have column in dx, str in ax
+	div cx
+	pop cx
+	pop bx
+
+	cmp ax, bx
+	jle _lessequalstr
+	jmp _greaterstr
+
+_lessequalstr:
+	push ax
+	cmp dx, cx
+	jle _lessequalcolumn
+	jmp _greatercolumn
+
+_greaterstr:
+	push bx
+	cmp dx, cx
+	jle _lessequalcolumn
+	jmp _greatercolumn
+
+_lessequalcolumn:
+	push dx
+	jmp _round2
+
+_greatercolumn:
+	push cx
+
+; in stack the most little column/the most little str from 1 and 2 in current_position
+_round2: ; the same comparison with 3 in current_position
+	lea bx, current_position
+	mov ax, [bx + 4]
+	xor dx, dx
+	mov cx, 10h ; to have column in dx, str in ax
+	div cx
+	pop cx
+	pop bx
+
+	cmp ax, bx
+	jle _lessequalstr1
+	jmp _greaterstr1
+
+_lessequalstr1:
+	push ax
+	cmp dx, cx
+	jle _lessequalcolumn1
+	jmp _greatercolumn1
+
+_greaterstr1:
+	push bx
+	cmp dx, cx
+	jle _lessequalcolumn1
+	jmp _greatercolumn1
+
+_lessequalcolumn1:
+	push dx
+	jmp _round3
+
+_greatercolumn1:
+	push cx
+
+; in stack the most little column/the most little str from 1, 2 and 3 in current_position
+_round3: ; the same comparison with 4 in current_position
+	lea bx, current_position
+	mov ax, [bx + 6]
+	xor dx, dx
+	mov cx, 10h ; to have column in dx, str in ax
+	div cx
+	pop cx
+	pop bx
+
+	cmp ax, bx
+	jle _lessequalstr2
+	jmp _greaterstr2
+
+_lessequalstr2:
+	push ax
+	cmp dx, cx
+	jle _lessequalcolumn2
+	jmp _greatercolumn2
+
+_greaterstr2:
+	push bx
+	cmp dx, cx
+	jle _lessequalcolumn2
+	jmp _greatercolumn2
+
+_lessequalcolumn2:
+	push dx
+	jmp _result
+
+_greatercolumn2:
+	push cx
+
+_result:
+	pop bx
+	pop ax
+	mov dx, 10h
+	mul dx
+	add ax, bx
+; coordinates of up left corner in aax
+	
+	pop dx
+	pop cx
+	pop bx
+	ret
+get_position endp
+
 restore_configuration proc near	; transport saved position & configuration
 	push ax						;to current position and configuration
 	push bx
 
+	lea bx, saved_position		; link to saved_position in bx
+
+	mov ax, [bx]				; first dot from saved_position in ax
+	lea bx, current_position	; link to current_position in bx
+	mov [bx], ax 				; restore first dot from saved_configuration to current_position
 	lea bx, saved_position
 
-	mov ax, [bx]
-	lea bx, current_position
-	mov [bx], ax
-	lea bx, saved_position
-
-	mov ax, [bx + 2]
+	mov ax, [bx + 2]			; second dot
 	lea bx, current_position
 	mov [bx + 2], ax
 	lea bx, saved_position
 
-	mov ax, [bx + 4]
+	mov ax, [bx + 4]			; third dot 
 	lea bx, current_position
 	mov [bx + 4], ax
 	lea bx, saved_position
 
-	mov ax, [bx + 6]
+	mov ax, [bx + 6]			; fourth dot
 	lea bx, current_position
 	mov [bx + 6], ax
 	lea bx, saved_position
 
-	lea bx, saved_rotate
-	mov ax, [bx]
-	lea bx, current_rotate
-	mov [bx], ax
+	lea bx, saved_rotate		; link to saved_rotate in bx
+	mov ax, [bx]				; saved_rotate in ax
+	lea bx, current_rotate		; link to current_rotate in bx
+	mov [bx], ax 				; restore current_rotate from saved_rotate
 
-	; lea bx, current_position
+	; lea bx, current_position  <==== testing
 	; mov ax, [bx]
 	; mov ax, [bx + 2]
 	; mov ax, [bx + 4]
 	; mov ax, [bx + 6]
 
 	; lea bx, current_rotate
-	; mov ax, [bx]
+	; mov ax, [bx]              <==== testing
 
 
 	pop bx
@@ -147,9 +270,9 @@ restore_configuration proc near	; transport saved position & configuration
 	ret
 restore_configuration endp
 
-saved_configuration proc near ; transport current position & configuration
-	push ax						;to saved position and configuration
-	push bx
+saved_configuration proc near 	; transport current position & configuration
+	push ax						; to saved position and configuration
+	push bx						; the same as restore_configuration but on the other side
 
 	lea bx, current_position
 
@@ -177,33 +300,33 @@ saved_configuration proc near ; transport current position & configuration
 	lea bx, saved_rotate
 	mov [bx], ax
 
-	; lea bx, saved_position
+	; lea bx, saved_position  <==== testing
 	; mov ax, [bx]
 	; mov ax, [bx + 2]
 	; mov ax, [bx + 4]
 	; mov ax, [bx + 6]
 
 	; lea bx, saved_rotate
-	; mov ax, [bx]
+	; mov ax, [bx]            <==== testing
 
 	pop bx
 	pop ax
 	ret
 saved_configuration endp
 
-clear_screen proc near ; clean game_field
+clear_screen proc near 		; clean game_field
 	push ax
 	push bx
 	push cx
 	push si
 
-	lea bx, game_field
-	mov ax, 0000h
-	mov cx, 25
+	lea bx, game_field		; link to game_field in bx
+	mov ax, 0000h 			; empty str in ax
+	mov cx, 25				; 25 loops
 
 	clearLoop:
-		mov [bx], ax
-		add bx, 2
+		mov [bx], ax 		; make empty str
+		add bx, 2			; link to nest str
 		loop clearLoop
 
 	pop si
@@ -224,9 +347,9 @@ calculate_configuration proc near
     push    si
     
 	mov si, offset current_rotate
-	mov bx, [si]
-	mov dx, ax
-	cmp bx, 1
+	mov bx, [si]						; link to current_rotate in bx
+	mov dx, ax 							; figure num in dx
+	cmp bx, 1							; check what rotate
 	je _up
 	cmp bx, 2
 	je _right
@@ -235,7 +358,7 @@ calculate_configuration proc near
 	cmp bx, 4
 	je _left
 
-_up:
+_up:									; if straight rotate
 	cmp dx, 1
 	mov ax, offset figure_square
 	je _ret
@@ -270,7 +393,7 @@ _up:
 	mov ax, offset figure_4dots
 	je _ret
 
-_right:
+_right:									; if right rotate
 	cmp dx, 1
 	mov ax, offset right_figure_square
 	je _ret
@@ -305,7 +428,7 @@ _right:
 	mov ax, offset right_figure_4dots
 	je _ret
 
-_down:
+_down:									; if overturned rotate
 	cmp dx, 1
 	mov ax, offset overturned_figure_square
 	je _ret
@@ -340,7 +463,7 @@ _down:
 	mov ax, offset overturned_figure_4dots
 	je _ret
 
-_left:
+_left:									; if left rotate
 	cmp dx, 1
 	mov ax, offset left_figure_square
 	je _ret
@@ -385,15 +508,15 @@ _ret:
 	ret
 calculate_configuration endp
 
-print_mask proc near
+print_mask proc near				; print "Speed:" & "Points:" in up left corner
 	push ax
 	push bx
 	push cx
 	push dx
 
-	; cld
-	; mov	ax, 0b800h
-	; mov	es, ax
+	; cld							; code to paint
+	; mov	ax, 0b800h				; should be at least once in code
+	; mov	es, ax 					; make third video mode
 	; mov	di, 0
 	; mov ah, 00h
 	; mov al, 03h
@@ -443,8 +566,8 @@ print_mask proc near
 	ret
 print_mask endp
 
-change_point proc near ; seems like 999 or 099 or 009 in ax
-	push bx
+change_point proc near 		; seems like 999 or 099 or 009 in ax
+	push bx					; print three-digit num from ax after "Points:"
 	push cx
 	push dx
 
@@ -483,8 +606,8 @@ change_point proc near ; seems like 999 or 099 or 009 in ax
 	ret
 change_point endp
 
-change_speed proc near ; seems like 999 or 099 or 009 in ax
-	push bx
+change_speed proc near 			; seems like 999 or 099 or 009 in ax
+	push bx						; print three-digit num from ax after "Speed:"
 	push cx
 	push dx
 
@@ -524,7 +647,7 @@ change_speed proc near ; seems like 999 or 099 or 009 in ax
 change_speed endp
 
 int2str16onedigit proc near ; num in al, res in al
-	push bx
+	push bx					; make 10 num from 16 num
 	push cx
 	push dx
 
@@ -583,16 +706,16 @@ print_string                proc near
     ret
 print_string                endp
 
-num2buf proc near ; num in ax, res in output_msg
-    push    bx
+num2buf proc near 		; num in ax, res in output_msg
+    push    bx			; transport num from ax to bufer output_msg
     push    cx
     push 	dx
     push    es
     push    di
     push    si
 
-    mov     si,     offset output_msg
-    mov cx, 5
+    mov     si,     offset output_msg	; you can change buffer
+    mov cx, 5							; you can change how many digits to print
 
     loopn2b:
     	cmp ax, 0
@@ -636,7 +759,7 @@ begin proc near
 	mov al, 03h
 	int 10h
 	xor	ax, ax
-	call restore_configuration
+	call get_position
 @@2:
 	xor	ah,ah
 	int	16h
