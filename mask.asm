@@ -7,7 +7,7 @@ game_field:
 	dw		1111h
 	dw		2222h
 	dw		3333h
-	dw		4444h
+	dw		0ffffh
 	dw		5555h
 	dw		0000h
 	dw		7777h
@@ -15,7 +15,7 @@ game_field:
 	dw		9999h
 	dw		0000h
 	dw		1111h
-	dw		2222h
+	dw		0ffffh
 	dw		3333h
 	dw		4444h
 	dw		5555h
@@ -101,10 +101,70 @@ org 100h
 _start:
 jmp		begin
 
-shift_down 	proc near			; number of entire line in ax
+search_lines	proc near
+	push 	ax
+	push 	bx
+	push 	cx
+	push 	dx
+
+	lea 	bx,		game_field		; link to game_field in bx
+	mov 	cx, 	25				; num of loops
+	mov 	dx, 	1				; str counter
+	searchLoop:
+		mov 	ax, 	0ffffh		; entire example
+		cmp 	[bx],	ax 			; comparison of str and example
+		je 		_sd					; if we need shift_down
+	_back2search:
+		add		bx, 	2			; next str
+		inc 	dx					; inc counter
+		loop searchLoop
+	jmp _searchExit
+
+_sd:
+	mov  	ax, 	dx				; num of ffff str to ax
+	call 	shift_down				
+	jmp		_back2search
+
+_searchExit:
+	; lea 	bx, 	game_field
+	; mov 	ax, 	[bx]		;<==== for testing
+	; mov 	ax, 	[bx + 2]
+	; mov 	ax, 	[bx + 4]
+	; mov 	ax, 	[bx + 6]
+	; mov 	ax, 	[bx + 8]
+	; mov 	ax, 	[bx + 10]
+	; mov 	ax, 	[bx + 12]
+	; mov 	ax, 	[bx + 14]
+	; mov 	ax, 	[bx + 16]
+	; mov 	ax, 	[bx + 18]
+	; mov 	ax, 	[bx + 20]		;<==== for testing
+	; mov 	ax, 	[bx + 22]
+	; mov 	ax, 	[bx + 24]
+	; mov 	ax, 	[bx + 26]
+	; mov 	ax, 	[bx + 28]
+	; mov 	ax, 	[bx + 30]
+	; mov 	ax, 	[bx + 32]
+	; mov 	ax, 	[bx + 34]
+	; mov 	ax, 	[bx + 36]
+	; mov 	ax, 	[bx + 38]	
+	; mov 	ax, 	[bx + 40]		;<==== for testing
+	; mov 	ax, 	[bx + 42]
+	; mov 	ax, 	[bx + 44]
+	; mov 	ax, 	[bx + 46]
+	; mov 	ax, 	[bx + 48]
+
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	pop 	ax
+	ret
+search_lines	endp
+
+shift_down 		proc near		; number of entire line in ax
 	push	ax
 	push 	bx
 	push 	cx
+	push 	dx
 
 	; mov 	ax,		25			;<======== for testing
 	mov 	cx, 	ax
@@ -154,6 +214,7 @@ shift_down 	proc near			; number of entire line in ax
 	; mov 	ax, 	[bx + 46]
 	; mov 	ax, 	[bx + 48]
 
+	pop 	dx
 	pop 	cx
 	pop 	bx
 	pop 	ax
@@ -819,7 +880,7 @@ begin 	proc near
 	mov 	al, 	03h
 	int 	10h
 	xor		ax, 	ax
-	call 	shift_down
+	call 	search_lines
 @@2:
 	xor		ah,		ah
 	int		16h
