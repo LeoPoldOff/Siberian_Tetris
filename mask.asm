@@ -2,13 +2,11 @@
 .386
 
 .data
-seed			dw 		0
-seed2			dw		0
 output_msg      db      '12345'
 game_field:
-	dw		1111h
+	dw		08000h
 	dw		2222h
-	dw		3333h
+	dw		0000h
 	dw		0ffffh
 	dw		5555h
 	dw		0000h
@@ -32,10 +30,10 @@ game_field:
 	dw		5555h
 
 current_position:
-		dw		018eh
-		dw		018eh
-		dw		018eh
-		dw		018eh
+		dw		0022h
+		dw		0001h
+		dw		0055h
+		dw		0099h
 	
 saved_position:
 		dw		9999h
@@ -125,6 +123,174 @@ table_figures:
 org 100h
 _start:
 jmp		begin
+
+integrate_figure	proc near				; changes game_field depending
+	push 	ax
+	push 	bx
+	push 	cx
+	push 	dx
+
+	lea 	bx, 	current_position		
+	mov 	ax, 	[bx]
+	mov 	bx, 	10h
+	xor 	dx, 	dx
+	div 	bx
+	push 	dx								; str in ax, column in dx
+	mov 	bx, 	2
+	mul 	bx
+
+	lea 	bx, 	game_field
+	add 	bx, 	ax 						; link to needed str in bx
+	pop 	dx								; column in dx
+	push 	bx
+
+	mov 	cx, 	16
+	mov 	ax, 	08000h
+	mov 	bx, 	0
+	strLoop:								; loop finding and changing bit we need
+		cmp 	dx, 	bx
+		jg 		_nextCol 					; wrong column
+		pop 	bx
+		mov 	cx, 	[bx]
+		add 	cx, 	ax
+		mov 	[bx], 	cx
+		mov 	ax, 	[bx]
+		jmp 	_nextCurrent
+
+	_nextCol:								; ax/2, inc bx
+		push 	cx
+		push 	dx
+		xor 	dx, 	dx
+		mov 	cx, 	2
+		div 	cx
+		pop 	dx
+		pop 	cx
+		inc 	bx
+		loop 	strLoop
+
+_nextCurrent:								; second current_position, same work
+	lea 	bx, 	current_position
+	mov 	ax, 	[bx + 2]
+	mov 	bx, 	10h
+	xor 	dx, 	dx
+	div 	bx
+	push 	dx
+	mov 	bx, 	2
+	mul 	bx
+	
+	lea 	bx, 	game_field
+	add 	bx, 	ax 							; link to needed str in bx
+	pop 	dx
+	push 	bx
+
+	mov 	cx, 	16
+	mov 	ax, 	08000h
+	mov 	bx, 	0
+	strLoop1:
+		cmp 	dx, 	bx
+		jg 		_nextCol1
+		pop 	bx
+		mov 	cx, 	[bx]
+		add 	cx, 	ax
+		mov 	[bx], 	cx
+		mov 	ax, 	[bx]
+		jmp 	_nextCurrent1
+
+	_nextCol1:
+		push 	cx
+		push 	dx
+		xor 	dx, 	dx
+		mov 	cx, 	2
+		div 	cx
+		pop 	dx
+		pop 	cx
+		inc 	bx
+		loop 	strLoop1
+
+_nextCurrent1:									; third current_position, the same work
+	lea 	bx, 	current_position
+	mov 	ax, 	[bx + 4]
+	mov 	bx, 	10h
+	xor 	dx, 	dx
+	div 	bx
+	push 	dx
+	mov 	bx, 	2
+	mul 	bx
+	
+	lea 	bx, 	game_field
+	add 	bx, 	ax 							; link to needed str in bx
+	pop 	dx
+	push 	bx
+
+	mov 	cx, 	16
+	mov 	ax, 	08000h
+	mov 	bx, 	0
+	strLoop2:
+		cmp 	dx, 	bx
+		jg 		_nextCol2
+		pop 	bx
+		mov 	cx, 	[bx]
+		add 	cx, 	ax
+		mov 	[bx], 	cx
+		mov 	ax, 	[bx]
+		jmp 	_nextCurrent2
+
+	_nextCol2:
+		push 	cx
+		push 	dx
+		xor 	dx, 	dx
+		mov 	cx, 	2
+		div 	cx
+		pop 	dx
+		pop 	cx
+		inc 	bx
+		loop 	strLoop2
+
+_nextCurrent2:									; fourth current_position, the same work
+	lea 	bx, 	current_position
+	mov 	ax, 	[bx + 6]
+	mov 	bx, 	10h
+	xor 	dx, 	dx
+	div 	bx
+	push 	dx
+	mov 	bx, 	2
+	mul 	bx
+	
+	lea 	bx, 	game_field
+	add 	bx, 	ax 							; link to needed str in bx
+	pop 	dx
+	push 	bx
+
+	mov 	cx, 	16
+	mov 	ax, 	08000h
+	mov 	bx, 	0
+	strLoop3:
+		cmp 	dx, 	bx
+		jg 		_nextCol3
+		pop 	bx
+		mov 	cx, 	[bx]
+		add 	cx, 	ax
+		mov 	[bx], 	cx
+		mov 	ax, 	[bx]
+
+		pop 	dx
+		pop 	cx
+		pop 	bx
+		pop 	ax
+		ret 									; exit
+
+	_nextCol3:
+		push 	cx
+		push 	dx
+		xor 	dx, 	dx
+		mov 	cx, 	2
+		div 	cx
+		pop 	dx
+		pop 	cx
+		inc 	bx
+		loop 	strLoop3
+
+integrate_figure	endp
 
 rotate_figure 	proc near 						; rotate current figure
 	push 	bx
@@ -432,7 +598,7 @@ search_lines	proc near
 
 	lea 	bx,		game_field		; link to game_field in bx
 	mov 	cx, 	24				; num of loops
-	mov 	dx, 	1				; str counter
+	mov 	dx, 	0				; str counter
 	searchLoop:
 		mov 	ax, 	0ffffh		; entire example
 		cmp 	[bx],	ax 			; comparison of str and example
@@ -489,9 +655,9 @@ shift_down 		proc near		; number of entire line in ax
 	push 	cx
 	push 	dx
 
-	; mov 	ax,		24			;<======== for testing
+	; mov 	ax,		23			;<======== for testing
 	mov 	cx, 	ax
-	dec 	cx
+	; dec 	cx
 	push 	cx					; loop number in to stack
 	mov 	bx, 	2
 	mul 	bx
@@ -1195,6 +1361,11 @@ num2buf proc near 						; num in ax, res in output_msg
 num2buf 	endp
 
 figure_generator 	proc near			; make new figure num in next_figure
+	push 	ax
+	push 	bx
+	push 	cx
+	push 	dx
+
 	xor 	dx, 	dx
 	in 		ax, 	40h					; maske random num
 	mov 	bx, 	10h
@@ -1216,6 +1387,10 @@ _changingFigure:						; put to next_figure
 	lea 	bx, 	next_figure
 	mov 	[bx], 	dx
 
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	pop 	ax
 	ret
 figure_generator	endp
 
@@ -1230,7 +1405,12 @@ begin 	proc near
 	xor		ax, 	ax
 	mov 	si,		1
 	mov 	di, 	11
-
+	call integrate_figure
+	lea 	bx, 	game_field
+	mov 	ax, 	[bx]
+	mov 	ax, 	[bx + 4]
+	mov 	ax, 	[bx + 10]
+	mov 	ax, 	[bx + 18]
 @@2:
 	xor		ah,		ah
 	int		16h
