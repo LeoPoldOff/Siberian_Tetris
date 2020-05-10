@@ -30,7 +30,6 @@ game_field:
 	dw		3333h
 	dw		4444h
 	dw		5555h
-	dw		0ffffh
 
 current_position:
 		dw		018eh
@@ -253,7 +252,7 @@ can_here		proc near 			; res like 1 or 0 in ax
 _square:							; checking
 	cmp 	ax, 	0fh
 	je 		_false
-	cmp 	bx, 	18h
+	cmp 	bx, 	17h
 	je 		_false
 	jmp 	_true
 
@@ -275,7 +274,7 @@ _twoDots13:							; checking 1 or 3 rotate
 	jmp 	_true
 
 _twoDots24:							; checking 2 or 4 rotate 
-	cmp 	bx, 	18h
+	cmp 	bx, 	17h
 	je 		_false					; if not valid
 	jmp 	_true					; if valid
 
@@ -297,7 +296,7 @@ _threeDots13:
 	jmp 	_true
 
 _threeDots24:
-	cmp 	bx, 	17h
+	cmp 	bx, 	16h
 	jge 	_false
 	jmp 	_true
 
@@ -306,7 +305,7 @@ _threeDots24:
 _triangle:
 	cmp 	ax, 	0fh
 	je 		_false
-	cmp 	bx, 	18h
+	cmp 	bx, 	17h
 	je 		_false
 	jmp 	_true
 
@@ -325,14 +324,14 @@ _g:
 _g13:
 	cmp 	ax, 	0fh
 	je 		_false
-	cmp 	bx, 	17h
+	cmp 	bx, 	16h
 	jge 	_false
 	jmp 	_true
 
 _g24:
 	cmp 	ax, 	0Eh
 	jge 	_false
-	cmp 	bx, 	18h
+	cmp 	bx, 	17h
 	je 		_false
 	jmp 	_true
 
@@ -351,14 +350,14 @@ _pyramid:
 _pyramid13:
 	cmp 	ax, 	0Eh
 	jge 	_false
-	cmp 	bx, 	18h
+	cmp 	bx, 	17h
 	je 		_false
 	jmp 	_true
 
 _pyramid24:
 	cmp 	ax, 	0fh
 	je 		_false
-	cmp 	bx, 	17h
+	cmp 	bx, 	16h
 	jge 	_false
 	jmp 	_true
 
@@ -377,14 +376,14 @@ _s:
 _s13:
 	cmp 	ax, 	0Eh
 	jge 	_false
-	cmp 	bx, 	18h
+	cmp 	bx, 	17h
 	je 		_false
 	jmp 	_true
 
 _s24:
 	cmp 	ax, 	0fh
 	je 		_false
-	cmp 	bx, 	17h
+	cmp 	bx, 	16h
 	jge 	_false
 	jmp 	_true
 
@@ -406,7 +405,7 @@ _fourDots13:
 	jmp 	_true
 
 _fourDots24:
-	cmp 	bx, 	16h
+	cmp 	bx, 	15h
 	jge 	_false
 	jmp 	_true
 
@@ -432,7 +431,7 @@ search_lines	proc near
 	push 	dx
 
 	lea 	bx,		game_field		; link to game_field in bx
-	mov 	cx, 	25				; num of loops
+	mov 	cx, 	24				; num of loops
 	mov 	dx, 	1				; str counter
 	searchLoop:
 		mov 	ax, 	0ffffh		; entire example
@@ -490,7 +489,7 @@ shift_down 		proc near		; number of entire line in ax
 	push 	cx
 	push 	dx
 
-	; mov 	ax,		25			;<======== for testing
+	; mov 	ax,		24			;<======== for testing
 	mov 	cx, 	ax
 	dec 	cx
 	push 	cx					; loop number in to stack
@@ -767,7 +766,7 @@ clear_screen 	proc near 					; clean game_field
 
 	lea 	bx, 	game_field				; link to game_field in bx
 	mov 	ax, 	0000h 					; empty str in ax
-	mov 	cx, 	25						; 25 loops
+	mov 	cx, 	24						; 24 loops
 
 	clearLoop:
 		mov 	[bx], 	ax 					; make empty str
