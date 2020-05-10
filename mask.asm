@@ -2,6 +2,8 @@
 .386
 
 .data
+seed			dw 		0
+seed2			dw		0
 output_msg      db      '12345'
 game_field:
 	dw		1111h
@@ -54,6 +56,8 @@ current_figure	dw 		11
 ; 9 - s
 ; 10 - back s
 ; 11 - four dots
+
+next_figure 	dw 		0
 
 current_color	dw 		1
 ; 1 - red
@@ -123,12 +127,12 @@ org 100h
 _start:
 jmp		begin
 
-rotate_figure 	proc near
+rotate_figure 	proc near 						; rotate current figure
 	push 	bx
 	push 	cx
 	push 	dx
 
-	lea 	bx, 	current_rotate
+	lea 	bx, 	current_rotate				; save current 
 	mov 	dx, 	[bx]
 	lea 	bx, 	saved_rotate
 	mov 	[bx], 	dx
@@ -136,7 +140,7 @@ rotate_figure 	proc near
 	je 		_toLeft
 	jmp 	_toRight
 
-_toLeft:
+_toLeft:										; rotate to left
 	cmp 	dx, 	1
 	je 		_carrymin
 	dec 	dx
@@ -144,7 +148,7 @@ _toLeft:
 	mov 	[bx], 	dx
 	jmp 	_ch
 
-_toRight:
+_toRight:										; rotate to right
 	cmp 	dx, 	4
 	je 		_carrymax
 	inc 	dx
@@ -152,21 +156,23 @@ _toRight:
 	mov 	[bx], 	dx
 	jmp 	_ch
 
-_carrymin:
+_carrymin:										; if left so 1 becames 4
 	mov 	bx, 	current_rotate
-	mov 	[bx], 	4
+	mov 	ax, 	4
+	mov 	[bx], 	ax
 	jmp 	_ch
 
 _carrymax:
-	mov 	bx, 	current_rotate
-	mov 	[bx], 	1
+	mov 	bx, 	current_rotate				; if right so 4 becames 1
+	mov 	ax, 	1
+	mov 	[bx], 	ax
 
 _ch:
 	call can_here
 	cmp 	ax, 	0
 	je 		_rollbackRotate
-	call 	from_pattern
-	call 	check_position
+	; call 	from_pattern
+	; call 	check_position
 	cmp 	ax, 	1
 	je 		_rollbackRotateAndPosition
 
@@ -176,7 +182,7 @@ _ch:
 	ret
 
 
-_rollbackRotate:
+_rollbackRotate:								; rollback rotate from save
 	lea 	bx, 	saved_rotate
 	mov 	dx, 	[bx]
 	lea 	bx, 	current_rotate
@@ -187,7 +193,7 @@ _rollbackRotate:
 	pop 	bx
 	ret
 
-_rollbackRotateAndPosition:
+_rollbackRotateAndPosition:						; rollback rotate and position from saved
 	lea 	bx, 	saved_rotate
 	mov 	dx, 	[bx]
 	lea 	bx, 	current_rotate
@@ -1189,6 +1195,31 @@ num2buf proc near 						; num in ax, res in output_msg
     ret
 num2buf 	endp
 
+figure_generator 	proc near			; make new figure num in next_figure
+	xor 	dx, 	dx
+	in 		ax, 	40h					; maske random num
+	mov 	bx, 	10h
+	div 	bx							; one digit random num in dx
+	cmp 	dx, 	11		
+	jg 		_minus5
+	cmp 	dx, 	0
+	je 		_plus1
+	jmp 	_changingFigure
+
+_minus5:								; if more than 11
+	sub 	dx, 	5
+	jmp 	_changingFigure
+
+_plus1:									; if zero
+	add 	dx, 	1
+
+_changingFigure:						; put to next_figure
+	lea 	bx, 	next_figure
+	mov 	[bx], 	dx
+
+	ret
+figure_generator	endp
+
 begin 	proc near
 	cld
 	mov		ax, 	0b800h
@@ -1198,8 +1229,9 @@ begin 	proc near
 	mov 	al, 	03h
 	int 	10h
 	xor		ax, 	ax
+	mov 	si,		1
+	mov 	di, 	11
 
-	call 	can_here
 @@2:
 	xor		ah,		ah
 	int		16h
