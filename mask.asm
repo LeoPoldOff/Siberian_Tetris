@@ -2,7 +2,7 @@
 .386
 
 .data
-output_msg      db      '     '
+output_msg      db      '12345'
 game_field:
 	dw		1111h
 	dw		2222h
@@ -31,10 +31,10 @@ game_field:
 	dw		0ffffh
 
 current_position:
-		dw		0228h
-		dw		0207h
-		dw		0116h
-		dw		0155h
+		dw		018eh
+		dw		018eh
+		dw		018eh
+		dw		018eh
 	
 saved_position:
 		dw		9999h
@@ -42,9 +42,31 @@ saved_position:
 		dw		7777h
 		dw		5555h
 
-current_rotate	dw		4 ; 1-straight, 2-right, 3-overturned, 4-left
+current_figure	dw 		11
+; 1 - square
+; 2 - dot
+; 3 - two dots
+; 4 - three dots
+; 5 - triangle
+; 6 - g
+; 7 - back g
+; 8 - pyramid
+; 9 - s
+; 10 - back s
+; 11 - four dots
+
+current_color	dw 		1
+; 1 - red
+; 2 - orange
+; 3 - yellow
+; 4 - green
+; 5 - blue
+; 6 - purple
+; 7 - brown
+
+current_rotate	dw		1 		; 1-straight, 2-right, 3-overturned, 4-left
 		
-saved_rotate	dw		2 ; 1-straight, 2-right, 3-overturned, 4-left
+saved_rotate	dw		2 		; 1-straight, 2-right, 3-overturned, 4-left
 
 table_figures:
 	rotate_straight:
@@ -100,6 +122,225 @@ table_figures:
 org 100h
 _start:
 jmp		begin
+
+can_here		proc near 			; res like 1 or 0 in ax
+	push 	bx						; res asks "can we draw current without crossing walls?"
+	push 	cx
+	push 	dx
+
+	call 	get_position			; taking data
+	mov 	bx, 	10h
+	xor 	dx, 	dx
+	div 	bx
+	push 	ax
+	push 	dx
+	lea 	bx, 	current_figure
+	mov 	cx,		[bx]
+	lea 	bx, 	current_rotate
+	mov 	dx, 	[bx]
+	pop 	ax
+	pop 	bx 						
+									; column in ax, str in bx
+									; figure in cx, rotate in dx
+	cmp 	cx, 	1				; what figure we have
+	je 		_square
+	cmp 	cx, 	2
+	je 		_true
+	cmp 	cx, 	3
+	je 		_twoDots
+	cmp 	cx, 	4
+	je 		_threeDots
+	cmp 	cx, 	5
+	je 		_triangle
+	cmp 	cx, 	6
+	je 		_g
+	cmp 	cx, 	7
+	je 		_g
+	cmp 	cx, 	8
+	je 		_pyramid
+	cmp 	cx, 	9
+	je 		_s
+	cmp 	cx, 	10
+	je 		_s
+	cmp 	cx, 	11
+	je 		_fourDots
+
+; ==========================
+
+_square:							; checking
+	cmp 	ax, 	0fh
+	je 		_false
+	cmp 	bx, 	18h
+	je 		_false
+	jmp 	_true
+
+; ==========================
+
+_twoDots:							; what rotate we have
+	cmp 	dx, 	1
+	je 		_twoDots13
+	cmp 	dx, 	3
+	je 		_twoDots13
+	cmp 	dx, 	2
+	je 		_twoDots24
+	cmp 	dx, 	4
+	je 		_twoDots24
+
+_twoDots13:							; checking 1 or 3 rotate 
+	cmp 	ax, 	0fh
+	je 		_false
+	jmp 	_true
+
+_twoDots24:							; checking 2 or 4 rotate 
+	cmp 	bx, 	18h
+	je 		_false					; if not valid
+	jmp 	_true					; if valid
+
+; =========================
+
+_threeDots:							; this and nexts the same
+	cmp 	dx, 	1
+	je 		_threeDots13
+	cmp 	dx, 	3
+	je 		_threeDots13
+	cmp 	dx, 	2
+	je 		_threeDots24
+	cmp 	dx, 	4
+	je 		_threeDots24
+
+_threeDots13:
+	cmp 	ax, 	0Eh
+	jge 	_false
+	jmp 	_true
+
+_threeDots24:
+	cmp 	bx, 	17h
+	jge 	_false
+	jmp 	_true
+
+; ========================
+
+_triangle:
+	cmp 	ax, 	0fh
+	je 		_false
+	cmp 	bx, 	18h
+	je 		_false
+	jmp 	_true
+
+; =======================
+
+_g:
+	cmp 	dx, 	1
+	je 		_g13
+	cmp 	dx, 	3
+	je 		_g13
+	cmp 	dx, 	2
+	je 		_g24
+	cmp 	dx, 	4
+	je 		_g24
+
+_g13:
+	cmp 	ax, 	0fh
+	je 		_false
+	cmp 	bx, 	17h
+	jge 	_false
+	jmp 	_true
+
+_g24:
+	cmp 	ax, 	0Eh
+	jge 	_false
+	cmp 	bx, 	18h
+	je 		_false
+	jmp 	_true
+
+; ==========================
+
+_pyramid:
+	cmp 	dx, 	1
+	je 		_pyramid13
+	cmp 	dx, 	3
+	je 		_pyramid13
+	cmp 	dx, 	2
+	je 		_pyramid24
+	cmp 	dx, 	4
+	je 		_pyramid24
+
+_pyramid13:
+	cmp 	ax, 	0Eh
+	jge 	_false
+	cmp 	bx, 	18h
+	je 		_false
+	jmp 	_true
+
+_pyramid24:
+	cmp 	ax, 	0fh
+	je 		_false
+	cmp 	bx, 	17h
+	jge 	_false
+	jmp 	_true
+
+; ========================
+
+_s:
+	cmp 	dx, 	1
+	je 		_s13
+	cmp 	dx, 	3
+	je 		_s13
+	cmp 	dx, 	2
+	je 		_s24
+	cmp 	dx, 	4
+	je 		_s24
+
+_s13:
+	cmp 	ax, 	0Eh
+	jge 	_false
+	cmp 	bx, 	18h
+	je 		_false
+	jmp 	_true
+
+_s24:
+	cmp 	ax, 	0fh
+	je 		_false
+	cmp 	bx, 	17h
+	jge 	_false
+	jmp 	_true
+
+; =======================
+
+_fourDots:
+	cmp 	dx, 	1
+	je 		_fourDots13
+	cmp 	dx, 	3
+	je 		_fourDots13
+	cmp 	dx, 	2
+	je 		_fourDots24
+	cmp 	dx, 	4
+	je 		_fourDots24
+
+_fourDots13:
+	cmp 	ax, 	0dh
+	jge 	_false
+	jmp 	_true
+
+_fourDots24:
+	cmp 	bx, 	16h
+	jge 	_false
+	jmp 	_true
+
+_true:
+	mov 	ax, 	1
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	ret
+
+_false:
+	mov 	ax, 	0
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	ret
+can_here		endp
 
 search_lines	proc near
 	push 	ax
@@ -803,14 +1044,14 @@ print_string	proc near
     push    cx
     push    es
     push    di
-    ; push    si
+    push    si
 
     mov     ax,     0b800h
     mov     es,     ax
     mov     di,     660
     xor     ax,     ax
-    mov     cx,     4
-    ; mov     si,     offset output_msg
+    mov     cx,     5
+    mov     si,     offset output_msg
     ; mov	[si + 1],	dl	
 
     loop_1:
@@ -880,7 +1121,8 @@ begin 	proc near
 	mov 	al, 	03h
 	int 	10h
 	xor		ax, 	ax
-	call 	search_lines
+
+	call 	can_here
 @@2:
 	xor		ah,		ah
 	int		16h
