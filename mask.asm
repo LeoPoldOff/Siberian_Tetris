@@ -123,6 +123,83 @@ org 100h
 _start:
 jmp		begin
 
+rotate_figure 	proc near
+	push 	bx
+	push 	cx
+	push 	dx
+
+	lea 	bx, 	current_rotate
+	mov 	dx, 	[bx]
+	lea 	bx, 	saved_rotate
+	mov 	[bx], 	dx
+	cmp 	ax, 	0
+	je 		_toLeft
+	jmp 	_toRight
+
+_toLeft:
+	cmp 	dx, 	1
+	je 		_carrymin
+	dec 	dx
+	mov 	bx, 	current_rotate
+	mov 	[bx], 	dx
+	jmp 	_ch
+
+_toRight:
+	cmp 	dx, 	4
+	je 		_carrymax
+	inc 	dx
+	mov 	bx, 	current_rotate
+	mov 	[bx], 	dx
+	jmp 	_ch
+
+_carrymin:
+	mov 	bx, 	current_rotate
+	mov 	[bx], 	4
+	jmp 	_ch
+
+_carrymax:
+	mov 	bx, 	current_rotate
+	mov 	[bx], 	1
+
+_ch:
+	call can_here
+	cmp 	ax, 	0
+	je 		_rollbackRotate
+	call 	from_pattern
+	call 	check_position
+	cmp 	ax, 	1
+	je 		_rollbackRotateAndPosition
+
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	ret
+
+
+_rollbackRotate:
+	lea 	bx, 	saved_rotate
+	mov 	dx, 	[bx]
+	lea 	bx, 	current_rotate
+	mov 	[bx], 	dx
+
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	ret
+
+_rollbackRotateAndPosition:
+	lea 	bx, 	saved_rotate
+	mov 	dx, 	[bx]
+	lea 	bx, 	current_rotate
+	mov 	[bx], 	dx
+	call 	restore_configuration
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	ret
+
+rotate_figure 	endp
+
 can_here		proc near 			; res like 1 or 0 in ax
 	push 	bx						; res asks "can we draw current without crossing walls?"
 	push 	cx
@@ -586,8 +663,8 @@ _result:
 	ret
 get_position 	endp
 
-restore_configuration 	proc near			; transport saved position & configuration
-	push 	ax								;to current position and configuration
+restore_configuration 	proc near			; transport saved position & rotate
+	push 	ax								;to current position and rotate
 	push 	bx
 
 	lea 	bx, 	saved_position			; link to saved_position in bx
@@ -1077,7 +1154,7 @@ num2buf proc near 						; num in ax, res in output_msg
     push    si
 
     mov     si,     offset output_msg	; you can change buffer
-    mov 	cx, 	5					; you can change how many digits to print
+    mov 	cx, 	3					; you can change how many digits to print
 
     loopn2b:
     	cmp 	ax, 	0
