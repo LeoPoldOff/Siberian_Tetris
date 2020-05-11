@@ -56,7 +56,7 @@ current_figure	dw 		11
 ; 10 - back s
 ; 11 - four dots
 
-next_figure 	dw 		0
+next_figure 	dw 		5
 
 current_color	dw 		1
 ; 1 - red
@@ -67,7 +67,7 @@ current_color	dw 		1
 ; 6 - purple
 ; 7 - brown
 
-next_color 		dw 		0
+next_color 		dw 		5
 
 current_rotate	dw		0 		; 1-straight, 2-right, 3-overturned, 4-left
 		
@@ -546,8 +546,77 @@ game_model			endp
 
 
 down_shift			proc near
-	ret
+	push	ax
+	push	bx
+	push	cx
+	push	si
+
+	call	move_down
+
+	lea		si,		[current_position]
+	stosw
+	mov		bx,		ax
+
+	lea		si,		[saved_position]
+	stosw
+
+	cmp		ax,		bx
+	jne		dwnsft_ret
+
+	call	integrate_figure
+	call	create_new_figure
+	call	figure_color_generator
+
+	call	check_position
+	cmp		ax,		0
+	je     	dwnsft_ret
+	
+	;	TODO
+
+	dwnsft_ret:
+		pop		si
+		pop		cx
+		pop		bx
+		pop		ax
+		ret
 down_shift			endp
+
+
+create_new_figure		proc near
+	push	si
+	push	di
+	push	ax
+	push	bx
+
+	lea		si,		[next_figure]
+	lea		di,		[current_figure]
+	movsw
+
+	lea		si,		[next_color]
+	lea		di,		[current_color]
+	movsw
+
+	mov		ax,		0
+	lea		di,		[current_rotate]
+	stosw
+
+	lea		si,		[current_figure]
+	stosw
+
+	mov		bl,		2
+	mul		bl
+
+	lea		si,		[table_figures]
+	add		si,		ax
+	mov		bx,		08h
+	call	from_pattern
+
+	pop		bx
+	pop		ax
+	pop		di
+	pop		si
+	ret
+create_new_figure		endp
 
 
 ; | input
@@ -3104,23 +3173,26 @@ figure_color_generator	endp
 
 
 begin:
-	call	ScreenClear
-	call	draw_glass
-	call	draw_field_and_cur_pos
-	call 	change_vectors
-	push	cs
-	pop		ds	
-	ccc:
-			hlt										;	Прерывание программное
-			mov		bx, 	head
-			cmp		bx, 	tail
-			jz		ccc								;	Если указатели хвоста и головы совпали - штош, не повезло
-			call	read_buf						;	Читаем информацию из буфера
-			call	game_model
-			cmp		[exit_flag],		1
-			jne		ccc
+	;call	ScreenClear
+	;call	draw_glass
+	;call	draw_field_and_cur_pos
+	;call 	change_vectors
 
-	call	restore_vectors
+	;push	cs
+	;pop		ds	
+	;ccc:
+	;		hlt										;	Прерывание программное
+	;		mov		bx, 	head
+	;		cmp		bx, 	tail
+	;		jz		ccc								;	Если указатели хвоста и головы совпали - штош, не повезло
+	;		call	read_buf						;	Читаем информацию из буфера
+	;		call	game_model
+	;		cmp		[exit_flag],		1
+	;		jne		ccc
+
+	;call	restore_vectors
+
+	call	down_shift
 
     db 		0eah
     dw 		7c00h,		0
