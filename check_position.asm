@@ -1,8 +1,9 @@
 model	tiny
+.386
 .data
 
 game_field:
-	dw		0002h
+	dw		0000h
 	dw		0000h
 	dw		0FFFFh
 	dw		0003h
@@ -50,6 +51,56 @@ saved_rotate	dw		2
 output_msg      db      '			'
 number          db      '           '
 
+table_figures:
+	rotate_straight:
+		figure_square	dw	0cc00h
+		figure_dot 		dw	08000h
+		figure_2dots	dw	0c000h
+		figure_3dots	dw 	0e000h
+		figure_triangle	dw	0c800h
+		figure_g 		dw	0c880h
+		figure_backg	dw	0c440h
+		figure_pyramid	dw	04e00h
+		figure_s 		dw	06c00h
+		figure_backs	dw	0c600h
+		figure_4dots	dw	0f000h
+	rotate_right:
+		right_figure_square		dw	0cc00h
+		right_figure_dot 		dw	08000h
+		right_figure_2dots		dw	08800h
+		right_figure_3dots		dw 	08880h
+		right_figure_triangle	dw	0c400h
+		right_figure_g 			dw	0e200h
+		right_figure_backg		dw	02e00h
+		right_figure_pyramid	dw	08c80h
+		right_figure_s 			dw	08c40h
+		right_figure_backs		dw	04c80h
+		right_figure_4dots		dw	08888h
+	rotate_overturned:
+		overturned_figure_square	dw	0cc00h
+		overturned_figure_dot 		dw	08000h
+		overturned_figure_2dots		dw	0c000h
+		overturned_figure_3dots		dw 	0e000h
+		overturned_figure_triangle	dw	04c00h
+		overturned_figure_g 		dw	044c0h
+		overturned_figure_backg		dw	088c0h
+		overturned_figure_pyramid	dw	0e400h
+		overturned_figure_s 		dw	06c00h
+		overturned_figure_backs		dw	0c600h
+		overturned_figure_4dots		dw	0f000h
+	rotate_left:
+		left_figure_square		dw	0cc00h
+		left_figure_dot 		dw	08000h
+		left_figure_2dots		dw	08800h
+		left_figure_3dots		dw 	08880h
+		left_figure_triangle	dw	08c00h
+		left_figure_g 			dw	08e00h
+		left_figure_backg		dw	00e800h
+		left_figure_pyramid		dw	04c40h
+		left_figure_s 			dw	08c40h
+		left_figure_backs		dw	04c80h
+		left_figure_4dots		dw	08888h
+
 .code
 org	100h
 locals
@@ -59,11 +110,116 @@ _start:
     jmp     begin
 
 begin:
-	mov		ax,		0
-	call	move_figure
+	lea		ax,		[overturned_figure_backg]
+	mov		bx,		46h
+	call	from_pattern
 
 	lea		ax,		[current_position]	
     jmp     exit
+
+
+; | input
+; ax - pattern
+; bx - left upper corner
+; | output
+; change buffer current_position
+from_pattern			proc near
+	push	cx
+	push	dx
+	push	si
+	push	di
+
+	add		bx,		30h
+	mov		si,		ax
+	lodsw
+	lea		di,		[current_position]
+
+	xor		cx,		cx
+	from_pattern_loop:
+		cmp		cx,		4
+		je		frptrn_checker
+		inc		cx
+
+		mov		dx,		ax						;	ax - нам нужен
+
+		shl		dx,		12
+		shr		dx,		12						;	в dx оставляем младшие 4 бита
+
+		cmp		dx,		8						;	Рисуем 4й бит
+		jge		frmptrn_4_bit
+
+		frmptrn_continue_3_bit:
+			shl		dx,		13
+			shr		dx,		13
+			inc		bx							;	Увеличиваем адрес
+			cmp		dx,		4					;	Рисуем 3й бит
+			jge		frmptrn_3_bit
+
+		frmptrn_continue_2_bit:
+			shl		dx,		14
+			shr		dx,		14
+			inc		bx							;	Увеличиваем адрес
+			cmp		dx,		2					;	Рисуем 2й бит
+			jge		frmptrn_2_bit
+
+		frmptrn_continue_1_bit:
+			shl		dx,		15
+			shr		dx,		15
+			inc		bx							;	Увеличиваем адрес
+			cmp		dx,		1					;	Рисуем 1й бит
+			jge		frmptrn_1_bit
+		
+
+		frmptrn_continue:		
+
+		sub		bx,		13h
+		shr		ax,		4
+		jmp		from_pattern_loop
+
+	frmptrn_4_bit:
+		push	ax
+		mov		ax,		bx
+		stosw
+		pop		ax
+		jmp		frmptrn_continue_3_bit
+
+	frmptrn_3_bit:
+		push	ax
+		mov		ax,		bx
+		stosw
+		pop		ax
+		jmp		frmptrn_continue_2_bit
+
+	frmptrn_2_bit:
+		push	ax
+		mov		ax,		bx
+		stosw
+		pop		ax
+		jmp		frmptrn_continue_1_bit
+
+	frmptrn_1_bit:
+		push	ax
+		mov		ax,		bx
+		stosw
+		pop		ax
+		jmp		frmptrn_continue
+
+	frptrn_checker:
+		lea		bx,		[saved_position]		;	Фигура может состоять из меньше, чем 4х точек. Остальные следует обнулить.
+		cmp		di,		bx
+		je		frptrn_ret
+		mov		ax,		0FFFFh
+		stosw
+		jmp		frptrn_checker
+
+	frptrn_ret:
+		pop		di
+		pop		si
+		pop		dx
+		pop		cx
+		ret
+from_pattern			endp
+
 
 
 
@@ -508,7 +664,6 @@ transform_address		endp
 exit:
     db 		0eah
     dw 		7c00h,		0
-    org 766
     dw 0aa55h
 
 end _start
