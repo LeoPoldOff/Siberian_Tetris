@@ -65,6 +65,8 @@ current_color	dw 		1
 ; 6 - purple
 ; 7 - brown
 
+next_color 		dw 		0
+
 current_rotate	dw		4 		; 1-straight, 2-right, 3-overturned, 4-left
 		
 saved_rotate	dw		2 		; 1-straight, 2-right, 3-overturned, 4-left
@@ -345,8 +347,8 @@ _ch:
 	je 		_rollbackRotate
 	call 	calculate_configuration
 	pop 	bx
-	call 	from_pattern
-	call 	check_position
+	;call 	from_pattern
+	;call 	check_position
 	cmp 	ax, 	1
 	je 		_rollbackRotate
 
@@ -1362,13 +1364,15 @@ _continuenum2buf:
     ret
 num2buf 	endp
 
-figure_generator 	proc near			; make new figure num in next_figure
+figure_color_generator 	proc near			; make new figure num in next_figure
 	push 	ax
 	push 	bx
 	push 	cx
 	push 	dx
 
 	xor 	dx, 	dx
+	in 		ax, 	40h
+	in 		ax, 	40h
 	in 		ax, 	40h					; maske random num
 	mov 	bx, 	10h
 	div 	bx							; one digit random num in dx
@@ -1389,22 +1393,55 @@ _changingFigure:						; put to next_figure
 	lea 	bx, 	next_figure
 	mov 	[bx], 	dx
 
-	; call 	figure_generator	; <======= for testing in begin
+; next_color
+
+	xor 	dx, 	dx
+	in 		ax, 	40h
+	in 		ax, 	40h					; make random num
+	mov 	bx, 	10h
+	div 	bx							; one digit random num in dx
+	cmp 	dx, 	7		
+	jg 		_toBig						; if more than 7
+	cmp 	dx, 	0			
+	je 		_plus1X						; if 0
+	jmp 	_changingColor
+
+_toBig:							; if more than 11
+		dec 	dx
+		cmp 	dx, 	7
+		jg 		_toBig
+	jmp _changingFigure
+
+_plus1X:									; if zero
+	add 	dx, 	1
+
+_changingColor:						; put to next_figure
+	lea 	bx, 	next_color
+	mov 	[bx], 	dx
+
+	; call figure_color_generator 	<======= for testing in begin
+
 	; lea 	bx, 	next_figure
 	; mov 	ax, 	[bx]
-	; call 	figure_generator
+	; lea 	bx, 	next_color
+	; mov 	ax, 	[bx]
+	; call figure_color_generator
 	; lea 	bx, 	next_figure
 	; mov 	ax, 	[bx]
-	; call 	figure_generator
+	; lea 	bx, 	next_color
+	; mov 	ax, 	[bx]
+	; call figure_color_generator
 	; lea 	bx, 	next_figure
-	; mov 	ax, 	[bx]		; <======= for testing in begin
+	; mov 	ax, 	[bx]
+	; lea 	bx, 	next_color
+	; mov 	ax, 	[bx]; 			<======= for testing in begin
 
 	pop 	dx
 	pop 	cx
 	pop 	bx
 	pop 	ax
 	ret
-figure_generator	endp
+figure_color_generator	endp
 
 begin 	proc near
 	cld
