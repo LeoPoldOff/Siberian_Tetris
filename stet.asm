@@ -69,9 +69,9 @@ current_color	dw 		1
 
 next_color 		dw 		5
 
-current_rotate	dw		0 		; 1-straight, 2-right, 3-overturned, 4-left
+current_rotate	dw		1 		; 1-straight, 2-right, 3-overturned, 4-left
 		
-saved_rotate	dw		20		; 1-straight, 2-right, 3-overturned, 4-left
+saved_rotate	dw		1		; 1-straight, 2-right, 3-overturned, 4-left
 
 table_figures:
 	rotate_straight:
@@ -554,11 +554,11 @@ down_shift			proc near
 	call	move_down
 
 	lea		si,		[current_position]
-	stosw
+	lodsw
 	mov		bx,		ax
 
 	lea		si,		[saved_position]
-	stosw
+	lodsw
 
 	cmp		ax,		bx
 	jne		dwnsft_ret
@@ -574,6 +574,7 @@ down_shift			proc near
 	;	TODO
 
 	dwnsft_ret:
+		call	draw_field_and_cur_pos
 		pop		si
 		pop		cx
 		pop		bx
@@ -596,12 +597,12 @@ create_new_figure		proc near
 	lea		di,		[current_color]
 	movsw
 
-	mov		ax,		0
+	mov		ax,		1
 	lea		di,		[current_rotate]
 	stosw
 
 	lea		si,		[current_figure]
-	stosw
+	lodsw
 
 	mov		bl,		2
 	mul		bl
@@ -1952,8 +1953,8 @@ _ch:
 	je 		_rollbackRotate
 	call 	calculate_configuration
 	pop 	bx
-	;call 	from_pattern
-	;call 	check_position
+	call 	from_pattern
+	call 	check_position
 	cmp 	ax, 	1
 	je 		_rollbackRotate
 
@@ -3173,26 +3174,25 @@ figure_color_generator	endp
 
 
 begin:
-	;call	ScreenClear
-	;call	draw_glass
-	;call	draw_field_and_cur_pos
-	;call 	change_vectors
+	call	ScreenClear
+	call	draw_glass
+	call	draw_field_and_cur_pos
+	call 	change_vectors
 
-	;push	cs
-	;pop		ds	
-	;ccc:
-	;		hlt										;	Прерывание программное
-	;		mov		bx, 	head
-	;		cmp		bx, 	tail
-	;		jz		ccc								;	Если указатели хвоста и головы совпали - штош, не повезло
-	;		call	read_buf						;	Читаем информацию из буфера
-	;		call	game_model
-	;		cmp		[exit_flag],		1
-	;		jne		ccc
+	push	cs
+	pop		ds	
+	ccc:
+			hlt										;	Прерывание программное
+			mov		bx, 	head
+			cmp		bx, 	tail
+			jz		ccc								;	Если указатели хвоста и головы совпали - штош, не повезло
+			call	read_buf						;	Читаем информацию из буфера
+			call	game_model
+			cmp		[exit_flag],		1
+			jne		ccc
 
-	;call	restore_vectors
+	call	restore_vectors
 
-	call	down_shift
 
     db 		0eah
     dw 		7c00h,		0
