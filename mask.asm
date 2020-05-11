@@ -2,7 +2,12 @@
 .386
 
 .data
-output_msg      db      '54321'
+output_msg      	db      '54321'
+
+pointsBuf 			dw 		7
+
+speedBuf 			dw 		300
+
 game_field:
 	dw		0000h
 	dw		0001h
@@ -134,6 +139,8 @@ integrate_figure	proc near				; changes game_field depending
 
 	lea 	bx, 	current_position		
 	mov 	ax, 	[bx]
+	cmp 	ax, 	0ffffh
+	je 		_nextCurrent
 	mov 	bx, 	10h
 	xor 	dx, 	dx
 	div 	bx
@@ -173,6 +180,8 @@ integrate_figure	proc near				; changes game_field depending
 _nextCurrent:								; second current_position, same work
 	lea 	bx, 	current_position
 	mov 	ax, 	[bx + 2]
+	cmp 	ax, 	0ffffh
+	je 		_nextCurrent1
 	mov 	bx, 	10h
 	xor 	dx, 	dx
 	div 	bx
@@ -212,6 +221,8 @@ _nextCurrent:								; second current_position, same work
 _nextCurrent1:									; third current_position, the same work
 	lea 	bx, 	current_position
 	mov 	ax, 	[bx + 4]
+	cmp 	ax, 	0ffffh
+	je 		_nextCurrent2
 	mov 	bx, 	10h
 	xor 	dx, 	dx
 	div 	bx
@@ -251,6 +262,8 @@ _nextCurrent1:									; third current_position, the same work
 _nextCurrent2:									; fourth current_position, the same work
 	lea 	bx, 	current_position
 	mov 	ax, 	[bx + 6]
+	cmp 	ax, 	0ffffh
+	je 		_exitIntegrate
 	mov 	bx, 	10h
 	xor 	dx, 	dx
 	div 	bx
@@ -291,6 +304,13 @@ _nextCurrent2:									; fourth current_position, the same work
 		pop 	cx
 		inc 	bx
 		loop 	strLoop3
+
+_exitIntegrate:
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	pop 	ax
+	ret 		
 
 integrate_figure	endp
 
@@ -1186,12 +1206,14 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	ret
 print_mask endp
 
-change_point 	proc near 			; num(not more than 999) in ax
+print_points 	proc near 			; num(not more than 999) in pointsBuf
 	push 	bx						; print three-digit num from ax after "Points:"
 	push 	cx
 	push 	dx
 
 	; mov 	ax, 	001		; <======= for testing
+	lea 	bx, 	pointsBuf
+	mov 	ax, 	[bx]
 	xor 	dx, 	dx
 	mov 	bx, 	10
 	div 	bx
@@ -1220,14 +1242,16 @@ change_point 	proc near 			; num(not more than 999) in ax
 	pop 	cx
 	pop 	bx
 	ret
-change_point 	endp
+print_points 	endp
 
-change_speed 	proc near 			; num(not more than 999) in ax
+print_speed 	proc near 			; num(not more than 999) in speed
 	push 	bx						; print three-digit num from ax after "Speed:"
 	push 	cx
 	push 	dx
 
 	; mov 	ax, 	300 		;<=== for testing
+	lea 	bx, 	speedBuf
+	mov 	ax, 	[bx]
 	xor 	dx, 	dx
 	mov 	bx, 	10
 	div 	bx
@@ -1256,7 +1280,7 @@ change_speed 	proc near 			; num(not more than 999) in ax
 	pop 	cx
 	pop 	bx
 	ret
-change_speed 	endp
+print_speed 	endp
 
 int2str16onedigit 	proc near 			; num in al, res in al
 	push 	bx							; make str view of digit
@@ -1452,6 +1476,10 @@ begin 	proc near
 	mov 	al, 	03h
 	int 	10h
 	xor		ax, 	ax
+
+	call 	print_mask
+	call 	print_points
+	call 	print_speed
 
 @@2:
 	xor		ah,		ah
