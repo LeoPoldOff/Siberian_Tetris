@@ -21,7 +21,7 @@ org 100h
 _start:
 jmp     begin
 
-print_menu 	proc near
+print_menu 	proc near               ; print menu screen without dot
 	push    ax
     push    bx
     push    cx
@@ -97,7 +97,7 @@ print_menu 	proc near
     ret
 print_menu 	endp
 
-print_dot   proc near
+print_dot   proc near                   ; print dot depending on buf choice
     push    ax
     push    bx
     push    cx
@@ -107,22 +107,22 @@ print_dot   proc near
     push    si
     push    di
 
-    mov     si,     offset  space
+    mov     si,     offset  space        ; clean the place where was dot
     mov     cx,     1
     mov     di,     1664
     call    print_si_string
 
-    mov     si,     offset  space
+    mov     si,     offset  space        ; clean the place where was dot
     mov     cx,     1
     mov     di,     1976
     call    print_si_string
 
-    mov     si,     offset  space
+    mov     si,     offset  space        ; clean the place where was dot
     mov     cx,     1
     mov     di,     2304
     call    print_si_string
 
-    mov     si,     offset  space
+    mov     si,     offset  space        ; clean the place where was dot
     mov     cx,     1
     mov     di,     2628
     call    print_si_string
@@ -198,8 +198,8 @@ _exitDot:
     ret
 print_dot   endp
 
-chooser     proc near
-    push    ax
+chooser     proc near                   ; infinity cycle of changing
+    push    ax                          ; dot place depending on pushed buttom 
     push    bx
     push    cx
     push    dx
@@ -223,7 +223,7 @@ chooser     proc near
 _progExit:
     int     19h
 
-_upDot:
+_upDot:                                 ; changing buf choice
     lea     bx,     choice
     mov     ax,     [bx]
     cmp     ax,     1
@@ -260,8 +260,8 @@ _forOne:
     ret
 chooser     endp
 
-print_si_string	proc near
-    push    ax
+print_si_string	proc near           ; res - printing
+    push    ax                      ; offset in si, length in cx, place in di
     push    bx
     push    cx
     push    dx

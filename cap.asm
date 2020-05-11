@@ -1,7 +1,7 @@
 .model tiny
 .386
 .data
-cap1          db      'Hello, Siberian Player!'; 23 698
+cap1          db      'Hello, Siberian Player!(press a key)'; 23 698
 cap2          db      'Your game was BRILLIANT and AMAZING!!!'; 38 844
 cap3          db      'We`re hoping to see you again.'; 30, 1012
 cap4          db      'This pale copy on Tetris developed by'; 34 1168
@@ -18,7 +18,7 @@ org 100h
 _start:
 jmp     begin
 
-print_caps      proc near
+print_caps      proc near                   ; print the caption screen
     push    ax
     push    bx
     push    cx
@@ -29,8 +29,8 @@ print_caps      proc near
     push    di
 
     mov     si,     offset  cap1
-    mov     cx,     23
-    mov     di,     698
+    mov     cx,     36
+    mov     di,     686
     call    print_si_string
 
     mov     ah,     0
@@ -114,8 +114,8 @@ print_caps      proc near
     ret
 print_caps      endp
 
-print_si_string	proc near
-    push    ax
+print_si_string	proc near           ; res - printing
+    push    ax                      ; offset in si, length in cx, place in di
     push    bx
     push    cx
     push    dx
