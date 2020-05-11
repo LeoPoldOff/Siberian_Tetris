@@ -98,6 +98,15 @@ print_menu 	proc near
 print_menu 	endp
 
 print_dot   proc near
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+    push    ds
+    push    es
+    push    si
+    push    di
+
     mov     si,     offset  space
     mov     cx,     1
     mov     di,     1664
@@ -133,6 +142,14 @@ _ngDot:
     mov     cx,     1
     mov     di,     1664
     call    print_si_string
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
     ret
 
 _configDot:
@@ -140,6 +157,14 @@ _configDot:
     mov     cx,     1
     mov     di,     1976
     call    print_si_string
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
     ret
 
 _captDot:
@@ -147,6 +172,14 @@ _captDot:
     mov     cx,     1
     mov     di,     2304
     call    print_si_string
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
     ret
 
 _exitDot:
@@ -154,11 +187,27 @@ _exitDot:
     mov     cx,     1
     mov     di,     2628
     call    print_si_string
-    ret
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
     ret
 print_dot   endp
 
 chooser     proc near
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+    push    ds
+    push    es
+    push    si
+    push    di
+
 @@3:
     call    print_dot
     xor     ax,     ax
@@ -200,6 +249,14 @@ _forOne:
     mov     [bx],   ax
     jmp     @@3
 
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
     ret
 chooser     endp
 
