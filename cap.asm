@@ -4,8 +4,8 @@
 cap1          db      'Hello, Siberian Player!'; 23 698
 cap2          db      'Your game was BRILLIANT and AMAZING!!!'; 38 844
 cap3          db      'We`re hoping to see you again.'; 30, 1012
-cap4          db      'This pale copy of Tetris developed by'; 34 1168
-cap5          db      'L@G corp.' ; 9 1352
+cap4          db      'This pale copy on Tetris developed by'; 34 1168
+cap5          db      'L@G inc.' ; 9 1352
 cap6          db      'DEVELOPERS:'; 11 1510
 cap7          db      '@D-rection' ; 10 1670
 cap8          db      '@LeoPoldOff'; 11 1830
@@ -20,7 +20,11 @@ jmp     begin
 
 print_caps      proc near
     push    ax
+    push    bx
     push    cx
+    push    dx
+    push    ds
+    push    es
     push    si
     push    di
 
@@ -101,14 +105,24 @@ print_caps      proc near
 
     pop     di
     pop     si
+    pop     es
+    pop     ds
+    pop     dx
     pop     cx
+    pop     bx
     pop     ax
     ret
 print_caps      endp
 
 print_si_string	proc near
     push    ax
+    push    bx
+    push    cx
+    push    dx
+    push    ds
     push    es
+    push    si
+    push    di
 
     mov     ax,     0b800h
     mov     es,     ax
@@ -120,7 +134,13 @@ print_si_string	proc near
         stosw
         loop loop_1
 
+    pop     di
+    pop     si
     pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
     pop     ax
     ret
 print_si_string                endp
