@@ -32,10 +32,10 @@ game_field:
 	dw		0000h
 
 current_position:
-		dw		0000h
-		dw		0010h
-		dw		0020h
-		dw		0030h
+		dw		00170h
+		dw		00171h
+		dw		00172h
+		dw		00173h
 	
 saved_position:
 		dw		9999h
@@ -567,6 +567,8 @@ down_shift			proc near
 	call	create_new_figure
 	call	figure_color_generator
 
+	lea		ax,		[game_field]
+
 	call	check_position
 	cmp		ax,		0
 	je     	dwnsft_ret
@@ -604,11 +606,9 @@ create_new_figure		proc near
 	lea		si,		[current_figure]
 	lodsw
 
-	mov		bl,		2
-	mul		bl
-
-	lea		si,		[table_figures]
+	lea		si,		[figure_square]
 	add		si,		ax
+	mov		ax,		si
 	mov		bx,		08h
 	call	from_pattern
 
@@ -1132,7 +1132,7 @@ move_down					proc near
 		
 		mov		bx,		ax
 		shr		bx,		4
-		cmp		bx,		18h
+		cmp		bx,		17h
 		je		rescondown
 		
 		inc		bx
@@ -1293,7 +1293,13 @@ check_position				proc near
 		lodsw
 		cmp		ax,		0FFFFh						;	Если дальше то
 		je		checker_true
+
 		mov		cx,		ax
+		call	check_bottom
+		cmp		ax,		1
+		je		checker_false
+
+		mov		ax,		cx
 		call	move_pointer						;	Получаем соответствующую точке строку игрового поля
 		call	transform_address					;	Получаем удобный для сравнения адрес точки
 		and		al,		cl
@@ -1315,6 +1321,24 @@ check_position				proc near
 check_position				endp
 
 
+; | input
+; ax - address
+; | output
+; ax - res
+; 0 = OK, 1 = Bad
+check_bottom			proc near
+	shr		ax,		4
+	cmp		ax,		24
+	je		chchbtm_1
+
+	mov		ax,		0
+	jmp		chchbtm_ret
+
+	chchbtm_1:
+		mov		ax,		1	
+	chchbtm_ret:
+		ret
+check_bottom			endp
 
 
 
@@ -1948,11 +1972,9 @@ _carrymax:
 	mov 	[bx], 	ax
 
 _ch:
-	call can_here
-	cmp 	ax, 	0
-	je 		_rollbackRotate
 	call 	calculate_configuration
 	pop 	bx
+	call	buffer_equalizer
 	call 	from_pattern
 	call 	check_position
 	cmp 	ax, 	1
@@ -3192,6 +3214,10 @@ begin:
 			jne		ccc
 
 	call	restore_vectors
+
+	;lea		ax,		[current_figure]
+	;lea		ax,		[current_position]
+	;call 	down_shift
 
 
     db 		0eah
