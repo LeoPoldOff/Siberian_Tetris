@@ -2,23 +2,15 @@
 .386
 
 .data
-output_msg      db      '12345'
+output_msg      db      '54321'
 game_field:
-	dw		08000h
-	dw		2222h
 	dw		0000h
-	dw		0ffffh
-	dw		5555h
-	dw		0000h
-	dw		7777h
-	dw		8888h
-	dw		9999h
-	dw		0000h
-	dw		1111h
-	dw		0ffffh
-	dw		3333h
+	dw		0001h
+	dw		0002h
+	dw		0003h
 	dw		4444h
 	dw		5555h
+	dw		0ffffh
 	dw		7777h
 	dw		8888h
 	dw		9999h
@@ -28,12 +20,20 @@ game_field:
 	dw		3333h
 	dw		4444h
 	dw		5555h
+	dw		0000h
+	dw		7777h
+	dw		8888h
+	dw		9999h
+	dw		0ffffh
+	dw		1111h
+	dw		2222h
+	dw		3333h
 
 current_position:
-		dw		0022h
-		dw		0001h
-		dw		0055h
-		dw		0099h
+		dw		0000h
+		dw		0010h
+		dw		0020h
+		dw		0030h
 	
 saved_position:
 		dw		9999h
@@ -41,7 +41,7 @@ saved_position:
 		dw		7777h
 		dw		5555h
 
-current_figure	dw 		11
+current_figure	dw 		5
 ; 1 - square
 ; 2 - dot
 ; 3 - two dots
@@ -65,7 +65,9 @@ current_color	dw 		1
 ; 6 - purple
 ; 7 - brown
 
-current_rotate	dw		1 		; 1-straight, 2-right, 3-overturned, 4-left
+next_color 		dw 		0
+
+current_rotate	dw		4 		; 1-straight, 2-right, 3-overturned, 4-left
 		
 saved_rotate	dw		2 		; 1-straight, 2-right, 3-overturned, 4-left
 
@@ -297,38 +299,45 @@ rotate_figure 	proc near 						; rotate current figure
 	push 	cx
 	push 	dx
 
-	lea 	bx, 	current_rotate				; save current 
-	mov 	dx, 	[bx]
-	lea 	bx, 	saved_rotate
-	mov 	[bx], 	dx
+	mov 	bx, 	ax
+	call 	saved_configuration
+
+	call 	get_position
+	push 	ax 									; left up in stack
+
+	mov 	ax, 	bx
 	cmp 	ax, 	0
 	je 		_toLeft
 	jmp 	_toRight
 
 _toLeft:										; rotate to left
+	lea 	bx, 	current_rotate
+	mov 	dx, 	[bx]
 	cmp 	dx, 	1
 	je 		_carrymin
 	dec 	dx
-	mov 	bx, 	current_rotate
+	lea 	bx, 	current_rotate
 	mov 	[bx], 	dx
 	jmp 	_ch
 
 _toRight:										; rotate to right
+	lea 	bx, 	current_rotate
+	mov 	dx, 	[bx]
 	cmp 	dx, 	4
 	je 		_carrymax
 	inc 	dx
-	mov 	bx, 	current_rotate
+	lea 	bx, 	current_rotate
 	mov 	[bx], 	dx
 	jmp 	_ch
 
 _carrymin:										; if left so 1 becames 4
-	mov 	bx, 	current_rotate
+	lea 	bx, 	current_rotate
 	mov 	ax, 	4
 	mov 	[bx], 	ax
 	jmp 	_ch
 
 _carrymax:
-	mov 	bx, 	current_rotate				; if right so 4 becames 1
+	lea 	bx, 	current_rotate				; if right so 4 becames 1
 	mov 	ax, 	1
 	mov 	[bx], 	ax
 
@@ -336,10 +345,12 @@ _ch:
 	call can_here
 	cmp 	ax, 	0
 	je 		_rollbackRotate
-	; call 	from_pattern
-	; call 	check_position
+	call 	calculate_configuration
+	pop 	bx
+	;call 	from_pattern
+	;call 	check_position
 	cmp 	ax, 	1
-	je 		_rollbackRotateAndPosition
+	je 		_rollbackRotate
 
 	pop 	dx
 	pop 	cx
@@ -348,22 +359,8 @@ _ch:
 
 
 _rollbackRotate:								; rollback rotate from save
-	lea 	bx, 	saved_rotate
-	mov 	dx, 	[bx]
-	lea 	bx, 	current_rotate
-	mov 	[bx], 	dx
-
-	pop 	dx
-	pop 	cx
-	pop 	bx
-	ret
-
-_rollbackRotateAndPosition:						; rollback rotate and position from saved
-	lea 	bx, 	saved_rotate
-	mov 	dx, 	[bx]
-	lea 	bx, 	current_rotate
-	mov 	[bx], 	dx
 	call 	restore_configuration
+
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -640,7 +637,6 @@ _searchExit:
 	; mov 	ax, 	[bx + 42]
 	; mov 	ax, 	[bx + 44]
 	; mov 	ax, 	[bx + 46]
-	; mov 	ax, 	[bx + 48]
 
 	pop 	dx
 	pop 	cx
@@ -657,11 +653,10 @@ shift_down 		proc near		; number of entire line in ax
 
 	; mov 	ax,		23			;<======== for testing
 	mov 	cx, 	ax
-	; dec 	cx
 	push 	cx					; loop number in to stack
 	mov 	bx, 	2
 	mul 	bx
-	sub 	ax, 	2			; shift to entire line in massive in ax
+; shift to entire line in massive in ax
 	lea 	bx, 	game_field
 	add 	bx, 	ax 			; link to entire line in bx
 
@@ -677,6 +672,9 @@ shift_down 		proc near		; number of entire line in ax
 	mov 	ax, 	0000h 		; make first str in game_field empty
 	mov 	[bx], 	ax
 
+	; mov 	ax, 	6			;<==== for testing
+	; call 	shift_down
+	; lea 	bx, 	game_field
 	; mov 	ax, 	[bx]		;<==== for testing
 	; mov 	ax, 	[bx + 2]
 	; mov 	ax, 	[bx + 4]
@@ -701,7 +699,6 @@ shift_down 		proc near		; number of entire line in ax
 	; mov 	ax, 	[bx + 42]
 	; mov 	ax, 	[bx + 44]
 	; mov 	ax, 	[bx + 46]
-	; mov 	ax, 	[bx + 48]
 
 	pop 	dx
 	pop 	cx
@@ -865,14 +862,14 @@ restore_configuration 	proc near			; transport saved position & rotate
 	lea 	bx, 	current_rotate			; link to current_rotate in bx
 	mov 	[bx], 	ax 						; restore current_rotate from saved_rotate
 
-	; lea 	bx, 	current_position  		<==== testing
+	; lea 	bx, 	current_position  		;<==== testing
 	; mov 	ax, 	[bx]
 	; mov 	ax, 	[bx + 2]
 	; mov 	ax, 	[bx + 4]
 	; mov 	ax, 	[bx + 6]
 
 	; lea 	bx, 	current_rotate
-	; mov 	ax, 	[bx]              		<==== testing
+	; mov 	ax, 	[bx]              		;<==== testing
 
 
 	pop 	bx
@@ -880,8 +877,8 @@ restore_configuration 	proc near			; transport saved position & rotate
 	ret
 restore_configuration 	endp
 
-saved_configuration 	proc near 			; transport current position & configuration
-	push 	ax								; to saved position and configuration
+saved_configuration 	proc near 			; transport current position & rotate
+	push 	ax								; to saved position and rotate
 	push 	bx								; the same as restore_configuration but on the other side
 
 	lea 	bx, 	current_position
@@ -910,14 +907,14 @@ saved_configuration 	proc near 			; transport current position & configuration
 	lea 	bx, 	saved_rotate
 	mov 	[bx], 	ax
 
-	; lea 	bx, 	saved_position  		<==== testing
+	; lea 	bx, 	saved_position  		;<==== testing
 	; mov 	ax, 	[bx]
 	; mov 	ax, 	[bx + 2]
 	; mov 	ax, 	[bx + 4]
 	; mov 	ax, 	[bx + 6]
 
 	; lea 	bx, 	saved_rotate
-	; mov 	ax, 	[bx]            		<==== testing
+	; mov 	ax, 	[bx]            		;<==== testing
 
 	pop 	bx
 	pop 	ax
@@ -939,6 +936,15 @@ clear_screen 	proc near 					; clean game_field
 		add 	bx, 	2					; link to nest str
 		loop 	clearLoop
 
+	; call clear_screen	;<=================== for testing in begin
+	; mov cx, 24
+	; lea bx, game_field
+	; loopx:
+	; 	mov ax, [bx]
+	; 	inc bx
+	; 	inc bx
+	; 	loop loopx		;<=================== for testing in begin
+
 	pop 	si
 	pop 	cx
 	pop 	bx
@@ -947,7 +953,7 @@ clear_screen 	proc near 					; clean game_field
 clear_screen 	endp
 
 calculate_configuration 	proc near	
-; figure num in ax, rotate in buf current_rotate, res(start byte of configuration) in ax
+; figure num in current_figure, rotate in buf current_rotate, res(start byte of configuration) in ax
 ; figure numered like in table
 	push    bx
     push    cx
@@ -956,9 +962,12 @@ calculate_configuration 	proc near
     push    di
     push    si
     
+	
+	lea 	bx, 	current_figure
+	mov 	ax, 	[bx]
+	mov 	dx, 	ax 						; figure num in dx
 	mov 	si, 	offset current_rotate
 	mov 	bx, 	[si]					; link to current_rotate in bx
-	mov 	dx, 	ax 						; figure num in dx
 	cmp 	bx, 	1						; check what rotate
 	je 	_up
 	cmp 	bx, 	2
@@ -1124,14 +1133,15 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	push 	cx
 	push 	dx
 
-	; cld									; code to paint
-	; mov 	ax,		0b800h					; should be at least once in code
-	; mov	es, 	ax 						; make third video mode
-	; mov	di, 	0
-	; mov 	ah, 	00h
-	; mov 	al, 	03h
-	; int 	10h
-	; xor	ax, 	ax
+	cld										; code to paint
+	mov 	ax,		0b800h					; should be at least once in code
+	mov		es, 	ax 						; make third video mode
+	mov		di, 	0
+	mov 	ah, 	00h
+	mov 	al, 	03h
+	int 	10h
+	xor	ax, 	ax
+
 	mov		ah, 	0Eh
 	mov 	al, 	050h
 	stosw
@@ -1169,19 +1179,19 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	mov 	al, 	030h
 	stosw
 
-	push 	dx
-	push 	cx
-	push 	bx
-	push 	ax
+	pop 	dx
+	pop 	cx
+	pop 	bx
+	pop 	ax
 	ret
 print_mask endp
 
-change_point 	proc near 			; seems like 999 or 099 or 009 in ax
+change_point 	proc near 			; num(not more than 999) in ax
 	push 	bx						; print three-digit num from ax after "Points:"
 	push 	cx
 	push 	dx
 
-	mov 	ax, 	001
+	; mov 	ax, 	001		; <======= for testing
 	xor 	dx, 	dx
 	mov 	bx, 	10
 	div 	bx
@@ -1191,23 +1201,19 @@ change_point 	proc near 			; seems like 999 or 099 or 009 in ax
 	div 	bx
 	push 	dx
 
-	mov 	bx, 	ax
 	call 	int2str16onedigit
 	mov 	di, 	16
 	mov		ah, 	0eh
-	mov 	al, 	dl
 	stosw
-	pop 	bx
+	pop 	ax
 	call 	int2str16onedigit
 	mov 	di, 	18
 	mov		ah, 	0eh
-	mov 	al, 	dl
 	stosw
-	pop 	bx
+	pop 	ax
 	call 	int2str16onedigit
 	mov 	di, 	20
 	mov		ah, 	0eh
-	mov 	al, 	dl
 	stosw
 
 	pop 	dx
@@ -1216,12 +1222,12 @@ change_point 	proc near 			; seems like 999 or 099 or 009 in ax
 	ret
 change_point 	endp
 
-change_speed 	proc near 			; seems like 999 or 099 or 009 in ax
+change_speed 	proc near 			; num(not more than 999) in ax
 	push 	bx						; print three-digit num from ax after "Speed:"
 	push 	cx
 	push 	dx
 
-	mov 	ax, 	300
+	; mov 	ax, 	300 		;<=== for testing
 	xor 	dx, 	dx
 	mov 	bx, 	10
 	div 	bx
@@ -1231,23 +1237,19 @@ change_speed 	proc near 			; seems like 999 or 099 or 009 in ax
 	div 	bx
 	push 	dx
 
-	mov 	bx, 	ax
 	call 	int2str16onedigit
 	mov 	di, 	176
 	mov		ah, 	0eh
-	mov 	al, 	dl
 	stosw
-	pop 	bx
+	pop 	ax
 	call 	int2str16onedigit
 	mov 	di, 	178
 	mov		ah, 	0eh
-	mov 	al, 	dl
 	stosw
-	pop 	bx
+	pop 	ax
 	call 	int2str16onedigit
 	mov 	di, 	180
 	mov		ah, 	0eh
-	mov 	al, 	dl
 	stosw
 
 	pop 	dx
@@ -1256,8 +1258,8 @@ change_speed 	proc near 			; seems like 999 or 099 or 009 in ax
 	ret
 change_speed 	endp
 
-int2str16onedigit 	proc near 		; num in al, res in al
-	push 	bx							; make 10 num from 16 num
+int2str16onedigit 	proc near 			; num in al, res in al
+	push 	bx							; make str view of digit
 	push 	cx
 	push 	dx
 
@@ -1325,10 +1327,11 @@ num2buf proc near 						; num in ax, res in output_msg
     push    si
 
     mov     si,     offset output_msg	; you can change buffer
-    mov 	cx, 	3					; you can change how many digits to print
+    mov 	cx, 	5					; you can change how many digits to print
 
     loopn2b:
     	cmp 	ax, 	0
+    	je 		_continuenum2buf
     	xor 	dx, 	dx
     	mov 	bx, 	10
     	div 	bx
@@ -1340,16 +1343,17 @@ num2buf proc near 						; num in ax, res in output_msg
     	mov 	ax, 	dx
     	loop 	loopn2b
 
+_continuenum2buf:						
 	pop 	ax
-	mov		[si],	ax
+	mov		[si],	ax 					; change depending on how many digits
 	pop 	ax
 	mov		[si + 1],	ax
-	pop 	ax
-	mov		[si + 2],	ax
-	pop 	ax
-	mov		[si + 3],	ax
-	pop 	ax
-	mov		[si + 4],	ax
+	pop 	ax 							; delete if less than 3
+	mov		[si + 2],	ax				; delete if less than 3
+	pop 	ax 							; delete if less than 4
+	mov		[si + 3],	ax				; delete if less than 4
+	pop 	ax 							; delete if less than 5
+	mov		[si + 4],	ax 				; delete if less than 5
 
     pop     si
     pop     di
@@ -1360,13 +1364,15 @@ num2buf proc near 						; num in ax, res in output_msg
     ret
 num2buf 	endp
 
-figure_generator 	proc near			; make new figure num in next_figure
+figure_color_generator 	proc near			; make new figure num in next_figure
 	push 	ax
 	push 	bx
 	push 	cx
 	push 	dx
 
 	xor 	dx, 	dx
+	in 		ax, 	40h
+	in 		ax, 	40h
 	in 		ax, 	40h					; maske random num
 	mov 	bx, 	10h
 	div 	bx							; one digit random num in dx
@@ -1387,12 +1393,55 @@ _changingFigure:						; put to next_figure
 	lea 	bx, 	next_figure
 	mov 	[bx], 	dx
 
+; next_color
+
+	xor 	dx, 	dx
+	in 		ax, 	40h
+	in 		ax, 	40h					; make random num
+	mov 	bx, 	10h
+	div 	bx							; one digit random num in dx
+	cmp 	dx, 	7		
+	jg 		_toBig						; if more than 7
+	cmp 	dx, 	0			
+	je 		_plus1X						; if 0
+	jmp 	_changingColor
+
+_toBig:							; if more than 11
+		dec 	dx
+		cmp 	dx, 	7
+		jg 		_toBig
+	jmp _changingFigure
+
+_plus1X:									; if zero
+	add 	dx, 	1
+
+_changingColor:						; put to next_figure
+	lea 	bx, 	next_color
+	mov 	[bx], 	dx
+
+	; call figure_color_generator 	<======= for testing in begin
+
+	; lea 	bx, 	next_figure
+	; mov 	ax, 	[bx]
+	; lea 	bx, 	next_color
+	; mov 	ax, 	[bx]
+	; call figure_color_generator
+	; lea 	bx, 	next_figure
+	; mov 	ax, 	[bx]
+	; lea 	bx, 	next_color
+	; mov 	ax, 	[bx]
+	; call figure_color_generator
+	; lea 	bx, 	next_figure
+	; mov 	ax, 	[bx]
+	; lea 	bx, 	next_color
+	; mov 	ax, 	[bx]; 			<======= for testing in begin
+
 	pop 	dx
 	pop 	cx
 	pop 	bx
 	pop 	ax
 	ret
-figure_generator	endp
+figure_color_generator	endp
 
 begin 	proc near
 	cld
@@ -1403,14 +1452,7 @@ begin 	proc near
 	mov 	al, 	03h
 	int 	10h
 	xor		ax, 	ax
-	mov 	si,		1
-	mov 	di, 	11
-	call integrate_figure
-	lea 	bx, 	game_field
-	mov 	ax, 	[bx]
-	mov 	ax, 	[bx + 4]
-	mov 	ax, 	[bx + 10]
-	mov 	ax, 	[bx + 18]
+
 @@2:
 	xor		ah,		ah
 	int		16h
