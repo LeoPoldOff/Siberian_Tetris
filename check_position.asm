@@ -110,12 +110,257 @@ _start:
     jmp     begin
 
 begin:
-	lea		ax,		[overturned_figure_backg]
-	mov		bx,		46h
-	call	from_pattern
-
-	lea		ax,		[current_position]	
+	lea		ax,		[left_figure_square]
+	mov		bx,		018Fh
+	call	buffer_equalizer
+	
     jmp     exit
+
+
+
+; | input
+; ax - pointer on new configuration
+; bx - left upper border
+; | output
+; bx - new left upper border position
+buffer_equalizer		proc near
+	push	ax
+	push	cx
+	push	dx
+	push	si
+
+	mov		si,		ax
+	lodsw
+
+	mov		cx,		ax							;	Сохраним указатель на конфигурацию
+	mov		dx,		bx							;	Сохраним текущий адрес ЛВУ
+	shr		dx,		4							;	Получим номер строки
+	call	get_height_configuration			;	Получим требуемое количество строчек
+	add		ax,		dx
+	cmp		ax,		24							;	Сравним
+	jge		equ_height
+
+	bfequ_continue:
+		mov		ax,		cx
+		mov		dx,		bx
+		shl		dx,		12
+		shr		dx,		12
+		call	get_width_configuration
+		add		ax,		dx
+		cmp		ax,		16
+		jge		equ_width
+	jmp		bfeqret
+
+	equ_height:									;	Если мало высоты
+		mov		si,		24		
+
+		mov		ax,		cx						;	Готовимся к вызову
+		call	get_height_configuration
+		sub		si,		ax
+		
+		shl		si,		4						;	Устанавливаем строку в нужном месте
+		shl		bx,		12						;	Удаляем в текущем адресе номер строки
+		shr		bx,		12
+		add		bx,		si						;	Устанавливаем строку в готовом адресе
+
+		jmp		bfequ_continue
+	
+	equ_width:
+		mov		si,		16
+
+		mov		ax,		cx						;	Готовимся к вызову
+		call	get_width_configuration
+		sub		si,		ax
+		
+		shr		bx,		4	
+		shl		bx,		4
+		add		bx,		si						;	Устанавливаем строку в готовом адресе
+	bfeqret:
+		pop		si
+		pop		dx
+		pop		cx
+		pop		ax
+		ret
+buffer_equalizer		endp
+
+
+; | input
+; ax - configuration
+; | ouput
+; ax - height
+get_height_configuration		proc near
+	push	bx
+	push	cx
+
+	mov		bx,		ax
+	shl		bx,		12
+	shr		bx,		12
+	cmp		bx,		0
+	jne		h4ret
+
+	mov		bx,		ax
+	shr		bx,		4
+	shl		bx,		12
+	shr		bx,		12
+	cmp		bx,		0
+	jne		h3ret
+
+	mov		bx,		ax
+	shr		bx,		8
+	shl		bx,		12
+	shr		bx,		12
+	cmp		bx,		0
+	jne		h2ret
+
+	jmp		h1ret
+
+	h4ret:
+		mov		ax,		4
+		jmp		gthghtrt
+
+	h3ret:
+		mov		ax,		3
+		jmp		gthghtrt
+
+	h2ret:
+		mov		ax,		2
+		jmp		gthghtrt
+	h1ret:
+		mov		ax,		1
+	gthghtrt:
+		pop		cx
+		pop		bx
+		ret
+get_height_configuration		endp
+
+
+; | input
+; ax - configuration
+; | ouput
+; ax - width
+get_width_configuration		proc near
+	push	bx
+	push	cx
+	push	dx
+	push	si
+
+	mov		bx,		ax
+	shl		bx,		12
+	shr		bx,		12
+
+	mov		cx,		ax
+	shr		cx,		4
+	shl		cx,		12
+	shr		cx,		12
+
+	mov		si,		ax
+	shr		si,		12
+	shl		si,		12
+	shr		si,		12
+
+	mov		dx,		ax
+	shr		dx,		8
+	shl		dx,		12
+	shr		dx,		12
+
+	mov		ax,		dx
+	call	function_or_for_four
+	cmp		dx,		1
+	je		gtwdth_4
+
+	mov		dx,		ax
+	shr		dx,		1
+	shr		bx,		1
+	shr		cx,		1
+	shr		si,		1
+	
+	mov		ax,		dx
+	call	function_or_for_four
+	cmp		dx,		1
+	je		gtwdth_3
+
+	mov		dx,		ax
+	shr		dx,		1
+	shr		bx,		1
+	shr		cx,		1
+	shr		si,		1
+
+	mov		ax,		dx
+	call	function_or_for_four
+	cmp		dx,		1
+	je		gtwdth_2
+
+	jmp		gtwdth_1
+
+	gtwdth_4:
+		mov		ax,		4
+		jmp		gtwdth_ret
+	gtwdth_3:
+		mov		ax,		3
+		jmp		gtwdth_ret
+	gtwdth_2:
+		mov		ax,		2
+		jmp		gtwdth_ret
+	gtwdth_1:
+		mov		ax,		1
+	gtwdth_ret:
+		pop		si
+		pop		dx
+		pop		cx
+		pop		bx
+		ret
+get_width_configuration		endp
+
+
+;| input
+; bx
+; cx
+; dx
+; si
+; | output
+; dx - 0 or 1
+function_or_for_four		proc near
+	push	bx
+	push	cx
+	push	si
+	
+	shl		bx,		15
+	shr		bx,		15
+
+	shl		cx,		15
+	shr		cx,		15
+
+	shl		dx,		15
+	shr		dx,		15
+
+	shl		si,		15
+	shr		si,		15
+
+	cmp		bx,		1
+	je		fnctnrffr_1
+
+	cmp		cx,		1
+	je		fnctnrffr_1
+
+	cmp		dx,		1
+	je		fnctnrffr_1
+
+	cmp		si,		1
+	je		fnctnrffr_1
+
+	jmp		fnctnrffr_0
+
+	fnctnrffr_1:
+		mov		dx,		1
+		jmp		fnctnrffr_ret
+	fnctnrffr_0:
+		mov		dx,		0
+	fnctnrffr_ret:
+		pop		si
+		pop		cx
+		pop		bx
+		ret
+function_or_for_four		endp		
 
 
 ; | input
@@ -222,9 +467,13 @@ from_pattern			endp
 
 
 
-
+; | input
+; ax - direction
+; 0 = down, 1 = left, 2 = right, 3 = up
+; | outpit
+; change current_position
 move_figure				proc near
-	cmp		ax,		0
+	cmp		ax,		0							;	case-switch блок
 	je		mvdwn
 	cmp		ax,		1
 	je		mvlft
@@ -232,7 +481,8 @@ move_figure				proc near
 	je		mvrght
 	cmp		ax,		3
 	je		mvup
-	mvdwn:
+
+	mvdwn:										;	Вызов соответствующих функций
 		call	move_down
 		jmp		mvfgr
 	mvlft:
@@ -259,36 +509,36 @@ move_up					proc near
 	push	si
 	push	di
 
-	call	saved_configuration
+	call	saved_configuration					;	Сохраняем текущее положение, на случай неудачи
 
 	mov		cx,		4
 	lea		si,		[current_position]
 	lea		di,		[current_position]
 
-	loop_move_up:
-		lodsw
+	loop_move_up:								;	Двигаем каждый элемент current_position
+		lodsw									;	Получаем адрес
 
-		cmp		ax,		0FFFFh
+		cmp		ax,		0FFFFh					;	Если пусто, то дальше тоже пусто
 		je		chresup
 		
 		mov		bx,		ax
 		shr		bx,		4
 		cmp		bx,		0
-		je		resconup
+		je		resconup						;	Если есть элемент с нулевой строчкой - всей фигуре выше не подняться
 		
 		dec		bx
 		shl		bx,		4
 		shl		ax,		12
 		shr		ax,		12
 		add		ax,		bx
-		stosw
+		stosw									;	Поднимаем фигуру
 
 		loop	loop_move_up
 			
 	chresup:
 		call	check_position
 		cmp		ax,		0
-		je		mvupret
+		je		mvupret							;	Проверяем, что получившая фигура не пересекает нигде нижнюю
 	resconup:
 		call	restore_configuration
 	mvupret:
