@@ -421,10 +421,10 @@ game_model			proc near
 	cmp		al,		0B9h
 	je		gm_drop
 
-	cmp		al,		09Eh
+	cmp		al,		01Eh
 	je		gm_rotate_left
 
-	cmp		al,		09Fh
+	cmp		al,		20h
 	je		gm_rotate_right
 
 	cmp		al,		090h
@@ -1576,11 +1576,53 @@ draw_one_sqare endp
 
 
 draw_field_and_cur_pos proc near
+		call	clear_glass
         call    draw_field
         call    draw_cur_pos
         ret
 draw_field_and_cur_pos endp
 
+clear_glass proc near                       ; чистит экран в пределах стакана (закрашивает черным)
+        push    ax 
+        push    bx
+        push    cx
+        push    dx        
+        push    es     
+        push    di
+        push    si                  
+
+
+        mov     di,     46
+        mov     cx,     32
+        mov     dx,     0b800h
+        mov     es,     dx
+        mov     ah,     00h
+        mov     al,     0DBh
+    _clear_glass_loop_1:
+        stosw
+        loop    _clear_glass_loop_1
+
+        mov     cx,     23
+    _clear_glass_step_2:
+        add     di,     96
+        push    cx
+        mov     cx,     32
+    _clear_glass_loop_2:
+        stosw
+        loop    _clear_glass_loop_2
+
+        pop     cx
+        loop    _clear_glass_step_2
+
+        pop     si
+        pop     di
+        pop     es
+        pop     dx
+        pop     cx
+        pop     bx
+        pop     ax
+    ret
+clear_glass endp
 
 
 ; ====================================================================================================================================
@@ -2476,7 +2518,7 @@ saved_configuration 	proc near 			; transport current position & rotate
 	ret
 saved_configuration 	endp
 
-clear_screen 	proc near 					; clean game_field
+clear_gamefield 	proc near 					; clean game_field
 	push 	ax
 	push 	bx
 	push 	cx
@@ -2511,7 +2553,7 @@ clear_screen 	proc near 					; clean game_field
 	pop 	bx
 	pop 	ax
 	ret
-clear_screen 	endp
+clear_gamefield 	endp
 
 calculate_configuration 	proc near	
 ; figure num in current_figure, rotate in buf current_rotate, res(start byte of configuration) in ax
