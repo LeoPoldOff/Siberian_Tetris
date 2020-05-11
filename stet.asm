@@ -43,7 +43,7 @@ saved_position:
 		dw		7777h
 		dw		5555h
 
-current_figure	dw 		5
+current_figure	dw 		11
 ; 1 - square
 ; 2 - dot
 ; 3 - two dots
@@ -69,9 +69,9 @@ current_color	dw 		1
 
 next_color 		dw 		0
 
-current_rotate	dw		4 		; 1-straight, 2-right, 3-overturned, 4-left
+current_rotate	dw		0 		; 1-straight, 2-right, 3-overturned, 4-left
 		
-saved_rotate	dw		2 		; 1-straight, 2-right, 3-overturned, 4-left
+saved_rotate	dw		20		; 1-straight, 2-right, 3-overturned, 4-left
 
 table_figures:
 	rotate_straight:
@@ -398,7 +398,7 @@ game_model			proc near
 	je		gmmdl_ret
 
 	cmp		al,		0Ah
-	jle		gm_speed_changes
+	jbe		gm_speed_changes
 
 	cmp		al,		0C8h
 	je		gm_move_up
@@ -3062,10 +3062,12 @@ figure_color_generator	endp
 
 
 begin:
+	call	ScreenClear
 	call	draw_glass
 	call	draw_field_and_cur_pos
-	call	change_vectors
-
+	call 	change_vectors
+	push	cs
+	pop		ds	
 	ccc:
 			hlt										;	Прерывание программное
 			mov		bx, 	head
