@@ -7,8 +7,6 @@ begin:
     jmp short _start
     nop
 _start:
-
-    ;call    draw_field
     call draw_glass
     call    draw_field
     call draw_cur_pos
@@ -68,9 +66,9 @@ draw_glass proc near                         ; рисуем стакан
         mov     es,     ax
         mov     di,     44
 
-    _loop1:                             ; рисуем 24 строки с вертикальными границами
+    _loop_glass_1:                             ; рисуем 24 строки с вертикальными границами
         cmp     cx,     0
-        je      _last  
+        je      _last_glass_str  
         mov     ah,     08h
         mov     al,     word_buf
         stosw
@@ -78,17 +76,17 @@ draw_glass proc near                         ; рисуем стакан
         stosw
         add     di,     92
         dec     cx
-        jmp _loop1
+        jmp _loop_glass_1
 
-    _last:                              ; рисуем последнюю строку (нижнюю границу)
+    _last_glass_str:                              ; рисуем последнюю строку (нижнюю границу)
         mov     al,     0DBh ;0C8h            ; левый уголок
         stosw
         mov     cx,     32
         mov     al,     0DBh ;0CDh            ; горизонтальная нижняя граница
 
-    _loop2:
+    _loop_glass_2:
         stosw
-        loop _loop2
+        loop _loop_glass_2
         mov     al,     0DBh ;0BCh            ; правый уголок
         stosw
 
@@ -175,7 +173,7 @@ draw_cur_pos proc near                       ; рисует текущую фи�
 
         lea     bx,     current_position
         mov     cx,     4
-    _loop_cur:              
+    _loop_cur_pos:              
         mov     ax,     [bx]
         cmp     ax,     0FFFFh
         je      _ret
@@ -210,7 +208,7 @@ draw_cur_pos proc near                       ; рисует текущую фи�
         
         pop     cx
         add     bx,     2
-        loop    _loop_cur
+        loop    _loop_cur_pos
     _ret:
         pop     dx
         pop     cx
@@ -266,24 +264,24 @@ draw_str proc near                              ; рисует строку из
             shr     ax,     15
             shl     ax,     15
             cmp     ax,     8000h
-            je      _print
+            je      _print_symb
             add     dx,     4
             pop     ax
             shl     ax,     1
             cmp     cx,     0
-            je      _cont
+            je      _conty
             dec     cx
             jmp     _str_loop
-        _print:
+        _print_symb:
             call    drawer
             pop     ax
             shl     ax,     1
             cmp     cx,     0
-            je      _cont
+            je      _conty
             dec     cx
             jmp     _str_loop
         
-        _cont:
+        _conty:
             ret
 draw_str endp
 
