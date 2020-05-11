@@ -4,7 +4,7 @@
 cap1          db      'Hello, Siberian Player!'; 23 698
 cap2          db      'Your game was BRILLIANT and AMAZING!!!'; 38 844
 cap3          db      'We`re hoping to see you again.'; 30, 1012
-cap4          db      'This pale copy on Tetris developed by'; 34 1168
+cap4          db      'This pale copy of Tetris developed by'; 34 1168
 cap5          db      'L@G corp.' ; 9 1352
 cap6          db      'DEVELOPERS:'; 11 1510
 cap7          db      '@D-rection' ; 10 1670
