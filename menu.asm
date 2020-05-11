@@ -12,6 +12,10 @@ menu8          db      'CAPTIONS'
 menu9          db      'EXIT'
 menu10         db      'MAY 2020'
 menu11         db      'L@G inc.'
+dotChoicer     db      '*'
+space          db      ' '
+
+choice         dw      1; 1-new game, 2-config, 3-capt, 4-exit
 .code
 org 100h
 _start:
@@ -93,6 +97,112 @@ print_menu 	proc near
     ret
 print_menu 	endp
 
+print_dot   proc near
+    mov     si,     offset  space
+    mov     cx,     1
+    mov     di,     1664
+    call    print_si_string
+
+    mov     si,     offset  space
+    mov     cx,     1
+    mov     di,     1976
+    call    print_si_string
+
+    mov     si,     offset  space
+    mov     cx,     1
+    mov     di,     2304
+    call    print_si_string
+
+    mov     si,     offset  space
+    mov     cx,     1
+    mov     di,     2628
+    call    print_si_string
+
+    lea     bx,     choice
+    mov     ax,     [bx]
+    cmp     ax,     1
+    je      _ngDot
+    cmp     ax,     2
+    je      _configDot
+    cmp     ax,     3
+    je      _captDot
+    jmp     _exitDot
+
+_ngDot:
+    mov     si,     offset  dotChoicer
+    mov     cx,     1
+    mov     di,     1664
+    call    print_si_string
+    ret
+
+_configDot:
+    mov     si,     offset  dotChoicer
+    mov     cx,     1
+    mov     di,     1976
+    call    print_si_string
+    ret
+
+_captDot:
+    mov     si,     offset  dotChoicer
+    mov     cx,     1
+    mov     di,     2304
+    call    print_si_string
+    ret
+
+_exitDot:
+    mov     si,     offset  dotChoicer
+    mov     cx,     1
+    mov     di,     2628
+    call    print_si_string
+    ret
+    ret
+print_dot   endp
+
+chooser     proc near
+@@3:
+    call    print_dot
+    xor     ax,     ax
+    int     16h
+    cmp     ah,     048h
+    je      _upDot
+    cmp     ah,     050h
+    je      _downDot
+    cmp     ah,     1
+    je      _progExit  
+    int     19h
+
+_progExit:
+    int     19h
+
+_upDot:
+    lea     bx,     choice
+    mov     ax,     [bx]
+    cmp     ax,     1
+    je      _forFour
+    dec     ax
+    mov     [bx],   ax
+    jmp     @@3
+_forFour:
+    mov     ax,     4
+    mov     [bx],   ax
+    jmp     @@3
+
+_downDot:
+    lea     bx,     choice
+    mov     ax,     [bx]
+    cmp     ax,     4
+    je      _forOne
+    inc     ax
+    mov     [bx],   ax
+    jmp     @@3
+_forOne:
+    mov     ax,     1
+    mov     [bx],   ax
+    jmp     @@3
+
+    ret
+chooser     endp
+
 print_si_string	proc near
     push    ax
     push    bx
@@ -135,6 +245,7 @@ begin   proc near
     xor     ax,     ax
 
     call    print_menu
+    call    chooser
 
 @@2:
     xor     ah,     ah
