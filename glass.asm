@@ -47,6 +47,23 @@ game_field:
 	    dw		1111h
 
 
+current_position:
+		dw		0017h
+		dw		0027h
+		dw		0018h
+		dw		0028h
+
+
+current_color	dw 		3
+; 1 - red
+; 2 - brown
+; 3 - yellow
+; 4 - green
+; 5 - blue
+; 6 - purple
+; 7 - cyan
+
+
 ScreenClear proc near                       ; полная чистка экрана
         mov     ax,     03h
         int 10h
@@ -98,23 +115,6 @@ draw_glass proc near                         ; рисуем стакан
         ret
         word_buf db     0DBh ;0C7h            ; вертикальная граница
 draw_glass endp
-
-
-current_position:
-		dw		0017h
-		dw		0027h
-		dw		0018h
-		dw		0028h
-
-
-current_color	dw 		3
-; 1 - red
-; 2 - brown
-; 3 - yellow
-; 4 - green
-; 5 - blue
-; 6 - purple
-; 7 - cyan
 
 
 color_choice proc near                          ; выбирает цвет для current_position
