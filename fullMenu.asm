@@ -30,16 +30,262 @@ conf2          db      'arrows = TO MOVE THE FIGURE'
 conf3          db      's      = TO STOP'
 conf4          db      'w      = TO PAUSE'
 conf5          db      'space  = TO DROP THE FIGURE'
-conf6          db      'a/s    = TO TURN THE FIGURE LEFT/RIGHT'
+conf6          db      'a/d    = TO TURN THE FIGURE LEFT/RIGHT'
 conf7          db      'q/e    = TO DECREASE/INCREASE SPEED OF FALLING'
 conf8          db      'n      = TO START NEW GAME'
 conf9          db      'b      = TO END'
 
 choice         dw      1; 1-new game, 2-config, 3-capt, 4-exit
+
+pointsBuf           dw      7
+
+game_field:
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+    dw      0000h
+
+current_position:
+        dw      0170h
+        dw      0171h
+        dw      0172h
+        dw      0173h
+    
+saved_position:
+        dw      9999h
+        dw      8888h
+        dw      7777h
+        dw      5555h
+
+current_figure  dw      11
+; 1 - square
+; 2 - dot
+; 3 - two dots
+; 4 - three dots
+; 5 - triangle
+; 6 - g
+; 7 - back g
+; 8 - pyramid
+; 9 - s
+; 10 - back s
+; 11 - four dots
+next_figure     dw      11
+current_color   dw      1
+; 1 - red
+; 2 - orange
+; 3 - yellow
+; 4 - green
+; 5 - blue
+; 6 - purple
+; 7 - brown
+
+next_color      dw      5
+current_rotate  dw      1       ; 1-straight, 2-right, 3-overturned, 4-left     
+saved_rotate    dw      1       ; 1-straight, 2-right, 3-overturned, 4-left
+
+table_figures:
+    rotate_straight:
+        figure_square   dw  0cc00h
+        figure_dot      dw  08000h
+        figure_2dots    dw  0c000h
+        figure_3dots    dw  0e000h
+        figure_triangle dw  0c800h
+        figure_g        dw  0c880h
+        figure_backg    dw  0c440h
+        figure_pyramid  dw  04e00h
+        figure_s        dw  06c00h
+        figure_backs    dw  0c600h
+        figure_4dots    dw  0f000h
+    rotate_right:
+        right_figure_square     dw  0cc00h
+        right_figure_dot        dw  08000h
+        right_figure_2dots      dw  08800h
+        right_figure_3dots      dw  08880h
+        right_figure_triangle   dw  0c400h
+        right_figure_g          dw  0e200h
+        right_figure_backg      dw  02e00h
+        right_figure_pyramid    dw  08c80h
+        right_figure_s          dw  08c40h
+        right_figure_backs      dw  04c80h
+        right_figure_4dots      dw  08888h
+    rotate_overturned:
+        overturned_figure_square    dw  0cc00h
+        overturned_figure_dot       dw  08000h
+        overturned_figure_2dots     dw  0c000h
+        overturned_figure_3dots     dw  0e000h
+        overturned_figure_triangle  dw  04c00h
+        overturned_figure_g         dw  044c0h
+        overturned_figure_backg     dw  088c0h
+        overturned_figure_pyramid   dw  0e400h
+        overturned_figure_s         dw  06c00h
+        overturned_figure_backs     dw  0c600h
+        overturned_figure_4dots     dw  0f000h
+    rotate_left:
+        left_figure_square      dw  0cc00h
+        left_figure_dot         dw  08000h
+        left_figure_2dots       dw  08800h
+        left_figure_3dots       dw  08880h
+        left_figure_triangle    dw  08c00h
+        left_figure_g           dw  08e00h
+        left_figure_backg       dw  00e800h
+        left_figure_pyramid     dw  04c40h
+        left_figure_s           dw  08c40h
+        left_figure_backs       dw  04c80h
+        left_figure_4dots       dw  08888h
+
+
+    ; Блок с используемыми буферами
+    theend  db      0           
+    buf     db      10 dup (0)                  ;   Зарезервировали 10 байт и поместили туда 0
+    bufend:                                     ;   Метка
+        head    dw      offset buf
+        tail    dw      offset buf
+    
+    exit_flag   db      0
+        
+    old9    dw      0,   0                      ;no
+    tick    db  0
+    pause   db  0
+    speed   db  008h
 .code
 org 100h
 _start:
 jmp     begin
+
+newGame     proc near
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+    push    ds
+    push    es
+    push    si
+    push    di
+
+    lea     bx,     pointsBuf
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     choice
+    mov     ax,     1
+    mov     [bx],    ax
+
+    call    clear_gamefield
+
+    lea     bx,     current_position
+    mov     ax,     0000h
+    mov     [bx],   ax
+    mov     [bx + 2], ax
+    mov     [bx + 4], ax
+    mov     [bx + 6], ax
+
+    lea     bx,     saved_position
+    mov     ax,     0000h
+    mov     [bx],   ax
+    mov     [bx + 2], ax
+    mov     [bx + 4], ax
+    mov     [bx + 6], ax
+
+    lea     bx,     current_figure
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     next_figure
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     current_color
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     next_color
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     current_rotate
+    mov     ax,     1
+    mov     [bx],    ax
+
+    lea     bx,     saved_rotate
+    mov     ax,     1
+    mov     [bx],    ax
+
+    lea     bx,     theend
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     buf
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     exit_flag
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     tick
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     pause
+    mov     ax,     0
+    mov     [bx],    ax
+
+    lea     bx,     speed
+    mov     ax,     0
+    mov     [bx],    ax
+
+
+    call  ScreenClear
+    call  draw_glass
+    call  draw_field_and_cur_pos
+    call   change_vectors
+
+    push  cs
+    pop    ds  
+    ccc:
+      hlt                    ;  Прерывание программное
+      mov    bx,   head
+      cmp    bx,   tail
+      jz    ccc                ;  Если указатели хвоста и головы совпали - штош, не повезло
+      call  read_buf            ;  Читаем информацию из буфера
+      call  game_model
+      lea    si,    [exit_flag]
+      lodsw
+      cmp    ax,    1
+      jne    ccc
+
+    call  restore_vectors
+
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
+    ret
+newGame     endp
 
 print_menu 	proc near               ; print menu screen without dot
 	push    ax
@@ -487,9 +733,42 @@ print_conf      proc near                   ; print the configuration screen
     ret
 print_conf      endp
 
-newGame         proc near                   ; link to tetris
+clear_gamefield     proc near                   ; clean game_field
+    push    ax
+    push    bx
+    push    cx
+    push    ds
+    push    es
+    push    si
+    push    di
+
+    lea     bx,     game_field              ; link to game_field in bx
+    mov     ax,     0000h                   ; empty str in ax
+    mov     cx,     24                      ; 24 loops
+
+    clearLoop:
+        mov     [bx],   ax                  ; make empty str
+        add     bx,     2                   ; link to nest str
+        loop    clearLoop
+
+    ; call clear_screen ;<=================== for testing in begin
+    ; mov cx, 24
+    ; lea bx, game_field
+    ; loopx:
+    ;   mov ax, [bx]
+    ;   inc bx
+    ;   inc bx
+    ;   loop loopx      ;<=================== for testing in begin
+
+    pop     di
+    pop     si
+    pop     es
+    pop     ds
+    pop     cx
+    pop     bx
+    pop     ax
     ret
-newGame         endp
+clear_gamefield     endp
 
 print_si_string	proc near           ; res - printing
     push    ax                      ; offset in si, length in cx, place in di
