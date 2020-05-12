@@ -3818,18 +3818,12 @@ newGame     proc near
 
 		mov		ax,		bx
 		call  	game_model
-		jmp		next_programm_hlt
+		jmp		ccc
 
 		pause_mode_operator:
 			mov		ax,		bx
 			call	stop_menu
-
-		next_programm_hlt:
-			lea    si,    [exit_flag]
-			lodsb
-
-			cmp    al,    0
-			je    ccc
+			jmp		ccc
 
 	gogogo:
     call  restore_vectors
