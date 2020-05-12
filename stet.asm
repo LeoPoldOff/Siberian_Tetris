@@ -475,7 +475,7 @@ game_model			proc near
 		mov		ah,		0
 
 		xor		bx,		bx
-		mov		bl,		9
+		mov		bl,		10
 		sub		bl,		al
 		mov		al,		bl
 
@@ -484,6 +484,7 @@ game_model			proc near
 
 		lea		di,		[speed]
 		stosb
+		call	print_speed
 
 		jmp		gmmdl_ret
 
@@ -558,6 +559,8 @@ game_model			proc near
 
 		lea		di,		[speed]
 		stosb
+
+		call	print_speed
 		jmp		gmmdl_ret
 
 	gm_speed_plus:
@@ -569,6 +572,8 @@ game_model			proc near
 
 		lea		di,		[speed]
 		stosb
+
+		call	print_speed
 		jmp		gmmdl_ret
 	gm_new_game:
 	;	TODO
@@ -1511,7 +1516,6 @@ draw_glass proc near                         ; рисуем стакан
         push    es
         push    di
 
-        call ScreenClear
         mov     cx,     24
         mov     ax,     0b800h
         mov     es,     ax
@@ -3203,13 +3207,13 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	push 	si
 	push 	di
 
-	cld										; code to paint
-	mov 	ax,		0b800h					; should be at least once in code
-	mov		es, 	ax 						; make third video mode
-	mov		di, 	0
-	mov 	ah, 	00h
-	mov 	al, 	03h
-	int 	10h
+	; cld										; code to paint
+	; mov 	ax,		0b800h					; should be at least once in code
+	; mov		es, 	ax 						; make third video mode
+	; mov		di, 	0
+	; mov 	ah, 	00h
+	; mov 	al, 	03h
+	; int 	10h
 	xor	ax, 	ax
 
 	mov		ah, 	0Eh
@@ -3643,7 +3647,10 @@ newGame     proc near
 	call	randomizer_2281488
 
     call  	ScreenClear
-    call  	draw_glass
+	call  	draw_glass
+	call	print_mask
+	call	print_points
+	call	print_speed
     call  	draw_field_and_cur_pos
 	call	draw_next_figure
     call   	change_vectors
