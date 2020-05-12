@@ -32,10 +32,10 @@ game_field:
 	dw		0000h
 
 current_position:
-		dw		00170h
-		dw		00171h
-		dw		00172h
-		dw		00173h
+		dw		0000h
+		dw		0001h
+		dw		0002h
+		dw		0003h
 	
 saved_position:
 		dw		9999h
@@ -55,9 +55,7 @@ current_figure	dw 		11
 ; 9 - s
 ; 10 - back s
 ; 11 - four dots
-
 next_figure 	dw 		5
-
 current_color	dw 		1
 ; 1 - red
 ; 2 - orange
@@ -68,9 +66,7 @@ current_color	dw 		1
 ; 7 - brown
 
 next_color 		dw 		5
-
-current_rotate	dw		1 		; 1-straight, 2-right, 3-overturned, 4-left
-		
+current_rotate	dw		1 		; 1-straight, 2-right, 3-overturned, 4-left		
 saved_rotate	dw		1		; 1-straight, 2-right, 3-overturned, 4-left
 
 table_figures:
@@ -565,9 +561,7 @@ down_shift			proc near
 
 	call	integrate_figure
 	call	create_new_figure
-	call	figure_color_generator
-
-	lea		ax,		[game_field]
+	;call	figure_color_generator
 
 	call	check_position
 	cmp		ax,		0
@@ -605,6 +599,7 @@ create_new_figure		proc near
 
 	lea		si,		[current_figure]
 	lodsw
+	dec		ax
 
 	lea		si,		[figure_square]
 	add		si,		ax
@@ -3217,7 +3212,7 @@ begin:
 
 	;lea		ax,		[current_figure]
 	;lea		ax,		[current_position]
-	;call 	down_shift
+	;call 	create_new_figure
 
 
     db 		0eah
