@@ -33,6 +33,49 @@ draw_next_figure proc near          ; доп - рисует следующую �
         stosw
         loop    _draw_frame_3
 
+
+    _draw_black:
+        sub     di,     660
+        mov     al,     0DBh
+        mov     ah,     00h
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        add     di,     144
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        add     di,     144
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        add     di,     144
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        sub     di,     496
+        jmp     _draw_figure_step_1
+
     _draw_figure_step_1:                    ; выбираем цвет
 
         lea     bx,     next_color
@@ -78,7 +121,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     
     _draw_figure_step_2:                        ; выбираем фигуру
 
-        sub     di,     660
+      ;  sub     di,     660
         lea     bx,     next_figure
         mov     ax,     [bx]
 
@@ -118,7 +161,8 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _square_next:
         add     di,     164
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
+        stosw
         stosw
         stosw
         stosw
@@ -207,7 +251,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _pyramid_next:
         add     di,     166
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
         stosw
         stosw
         add     di,     152
@@ -222,7 +266,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _s_next:
         add     di,     166
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
         stosw
         stosw
         stosw
@@ -237,7 +281,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _back_s_next:
         add     di,     162
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
         stosw
         stosw
         stosw

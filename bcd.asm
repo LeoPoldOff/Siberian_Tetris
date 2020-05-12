@@ -22,9 +22,11 @@ bcd2int proc                            ; bcd-число лежит в ax
         push    bx
         push    cx
         push    dx
+        push    si
+        push    di
 
         xor     cx,     cx
-       ; mov     ax,     01010001b      ; значение ax для проверки
+        mov     ax,     01010001b      ; значение ax для проверки
         
         mov     bx,     ax
         mov     dx,     ax              ; bx - первая цифра
@@ -62,6 +64,9 @@ bcd2int proc                            ; bcd-число лежит в ax
         call one_mul
 
         mov     ax,     cx              ; переведенное тоже лежит в ax
+
+        pop     di
+        pop     si
         pop     dx
         pop     cx
         pop     bx
