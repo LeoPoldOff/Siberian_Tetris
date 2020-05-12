@@ -46,6 +46,7 @@ game_field:
 	    dw		2222h
 	    dw		1111h
 
+current_figure	dw 		12
 
 current_position:
 		dw		0017h
@@ -167,7 +168,7 @@ color_choice endp
 
 draw_cur_pos proc near                       ; рисует текущую фигуру
         push    ax                           ; использует current_position и current_color
-        push    bx
+        push    bx                           ; и current_figure тоже 
         push    cx
         push    dx
 
