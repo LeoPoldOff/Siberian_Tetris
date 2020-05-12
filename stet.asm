@@ -345,16 +345,13 @@ int8	proc near							;	Модифицируем обработчик преры�
 	lodsb
 
 	cmp		al,		0						;	Обработка паузы
-	jne		@@stop_menu
+	jne		@@231
 	
 	call	count_rest
 	cmp		ax,		0						;	В зависимости от скорости происходит сдвиг вниз
 	je		@@down_shift
 
 	jmp		@@231							;	Отправляемся на выход
-@@stop_menu:
-	call	stop_menu
-	jmp		@@231
 @@down_shift:
 	call	down_shift	
 @@231:
@@ -523,10 +520,21 @@ game_model			proc near
 		jmp		gmmdl_ret
 
 	gm_pause:
-		mov		ax,		1
+		lea		si,		[pause]
+		lodsb
+		cmp		al,		0
+		je		_to_pause
+
+		mov		ax,		0
 		lea		di,		[pause]
 		stosb
 		jmp		gmmdl_ret
+
+		_to_pause:
+			mov		ax,		1
+			lea		di,		[pause]
+			stosb
+			jmp		gmmdl_ret
 
 	gm_drop:
 		call	move_down
@@ -624,7 +632,9 @@ down_shift			proc near
 	cmp		ax,		0
 	je     	dwnsft_ret
 	
-	;	TODO
+	mov		ax,		2
+	lea		di,		[exit_flag]
+	stosb
 
 	dwnsft_ret:
 		call	draw_field_and_cur_pos
@@ -732,37 +742,14 @@ stop_menu			proc near
 	push	bx
 	push	si
 	push	di
-	
-	lea		si,		[pause]
-	stosb
 
-	cmp		ax,		1							;	Пауза или остановка
-	je		pause_mode
-
-	xor		ax,		ax
-
-	mov		bx, 	head
-	cmp		bx, 	tail
-	je		stop_menu_ret
-
-	call	read_buf
 	cmp		al,		01Fh						;	Если СТОП - то только по n выходим
 	jne		stop_menu_ret
+
 	xor		ax,		ax
 	lea		di,		[pause]
 	stosb
-	jmp		stop_menu_ret
 
-	pause_mode:
-		xor		ax,		ax
-
-		mov		bx, 	head
-		cmp		bx, 	tail
-		je		stop_menu_ret					;	Если ПАУЗА - то по нажатию любой кнопки
-							
-		xor		ax,		ax
-		lea		di,		[pause]
-		stosb
 	stop_menu_ret:
 		pop		di
 		pop		si
@@ -2766,7 +2753,7 @@ shift_down     proc near    ; number of entire line in ax
 
 _victory:
   lea   bx,   exit_flag
-  mov	ax,		2
+  mov	ax,		1
   mov   [bx],   ax
 
   ; mov   ax,   6      ;<==== for testing
@@ -3285,7 +3272,7 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	stosw
 	mov 	al, 	04eh
 	stosw
-	mov 	al, 	092h
+	mov 	al, 	054h
 	stosw
 	mov 	al, 	053h
 	stosw
@@ -3733,18 +3720,32 @@ newGame     proc near
     pop    ds 
 
     ccc:
-		hlt                    		;  Прерывание программное
+		hlt                    			;  Прерывание программное
 		mov    bx,   head
 		cmp    bx,   tail
 		jz    ccc                		;  Если указатели хвоста и головы совпали - штош, не повезло
-		call  read_buf            	;  Читаем информацию из буфера
-		call  game_model
+		call  read_buf            		;  Читаем информацию из буфера
+		mov		bx,		ax
 
-		lea    si,    [exit_flag]
+		lea		si,		[pause]
 		lodsb
+		cmp		al,		2
+		je		pause_mode_operator
 
-		cmp    al,    0
-		je    ccc
+		mov		ax,		bx
+		call  	game_model
+		jmp		next_programm_hlt
+
+		pause_mode_operator:
+			mov		ax,		bx
+			call	stop_menu
+
+		next_programm_hlt:
+			lea    si,    [exit_flag]
+			lodsb
+
+			cmp    al,    0
+			je    ccc
 
     call  restore_vectors
 
