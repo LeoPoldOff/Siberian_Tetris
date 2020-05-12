@@ -391,7 +391,7 @@ game_model			proc near
 	push	di
 
 	cmp		al,		01h
-	je		gmmdl_ret
+	je		gm_exit
 
 	cmp		al,		0Ah
 	jbe		gm_speed_changes
@@ -408,13 +408,13 @@ game_model			proc near
 	cmp		al,		0CDh
 	je		gm_move_right
 
-	cmp		al,		09Fh
+	cmp		al,		01Fh
 	je		gm_stop
 
-	cmp		al,		091h
+	cmp		al,		011h
 	je		gm_pause
 
-	cmp		al,		0B9h
+	cmp		al,		039h
 	je		gm_drop
 
 	cmp		al,		01Eh
@@ -423,17 +423,14 @@ game_model			proc near
 	cmp		al,		20h
 	je		gm_rotate_right
 
-	cmp		al,		090h
+	cmp		al,		010h
 	je		gm_speed_minus
 
-	cmp		al,		092h
+	cmp		al,		012h
 	je		gm_speed_plus
 
-	cmp		al,		0B1h
+	cmp		al,		011h
 	je		gm_new_game
-
-	cmp		al,		0B0h
-	je		gm_exit
 
 	jmp		gmmdl_ret
 
@@ -491,8 +488,18 @@ game_model			proc near
 		jmp		gmmdl_ret
 
 	gm_drop:
-		;	TODO
+		call	move_down
+		lea		si,		[current_position]
+		lodsw
+		mov		bx,		ax
+		lea		si,		[saved_position]
+		lodsw
+		cmp		ax,		bx
+		jne		gm_drop
+		
+		call	down_shift
 		jmp		gmmdl_ret
+
 
 	gm_rotate_left:
 		mov		ax,		0
@@ -531,7 +538,9 @@ game_model			proc near
 	;	TODO
 		jmp		gmmdl_ret
 	gm_exit:
-	;	TODO	
+		lea		di,		[exit_flag]	
+		mov		ax,		1
+		stosw
 	gmmdl_ret:
 		pop		di
 		pop		si
@@ -562,7 +571,7 @@ down_shift			proc near
 	call	integrate_figure
 	call	search_lines
 	call	create_new_figure
-	;call	figure_color_generator
+	call	randomizer_2281488
 
 	call	check_position
 	cmp		ax,		0
@@ -578,6 +587,55 @@ down_shift			proc near
 		pop		ax
 		ret
 down_shift			endp
+
+
+; | input
+; empty. read buffer
+; | output
+; 
+; change buffers
+randomizer_2281488			proc near
+	push	ax
+	push	bx
+	push	si
+	push	di
+	push	dx
+
+	mov		ax,		0
+	int		1ah
+
+	mov		ax,		dx
+	mov		bx,		dx
+	xor		dx,		dx
+
+	mov		cx,		11					;	Получаем фигуру
+	div		cx
+
+	mov		cx,		dx
+
+	mov		ax,		bx					;	Получаем цвет
+	xor		dx,		dx
+	mov		bx,		7
+	div		bx
+
+	mov		bx,		dx
+	mov		ax,		cx
+	inc		ax
+	lea		di,		[next_figure]
+	stosw
+
+	mov		ax,		bx
+	inc		ax
+	lea		di,		[next_color]
+	stosw
+
+	pop		dx
+	pop		di
+	pop		si
+	pop		bx
+	pop		ax
+	ret
+randomizer_2281488			endp
 
 
 create_new_figure		proc near
@@ -3207,8 +3265,8 @@ begin:
 			jz		ccc								;	Если указатели хвоста и головы совпали - штош, не повезло
 			call	read_buf						;	Читаем информацию из буфера
 			call	game_model
-			cmp		[exit_flag],		1
-			jne		ccc
+			cmp		[exit_flag],		0
+			je		ccc
 
 	call	restore_vectors
 
