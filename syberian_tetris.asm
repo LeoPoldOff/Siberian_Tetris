@@ -623,16 +623,16 @@ down_shift			proc near
 	cmp		ax,		bx
 	jne		dwnsft_ret
 
-	call	integrate_figure
-	call	search_lines
-	call	create_new_figure
-	call	randomizer_2281488
+	call	integrate_figure     
+	call	search_lines 		 
+	call	create_new_figure 
+	call	randomizer
 
 	call	check_position
 	cmp		ax,		0
 	je     	dwnsft_ret
 	
-	mov		ax,		2
+	mov		al,		2
 	lea		di,		[exit_flag]
 	stosb
 
@@ -652,12 +652,18 @@ down_shift			endp
 ; | output
 ; 
 ; change buffers
-randomizer_2281488			proc near
+randomizer			proc near
 	push	ax
 	push	bx
 	push	si
 	push	di
 	push	dx
+
+	mov		di,		0
+	
+	bomb_checker:
+	cmp		di,		3
+	je		bomb_bomb_bomb
 
 	mov		ax,		0
 	int		1ah
@@ -666,8 +672,14 @@ randomizer_2281488			proc near
 	mov		bx,		dx
 	xor		dx,		dx
 
-	mov		cx,		11					;	Получаем фигуру
+	mov		cx,		12					;	Получаем фигуру
 	div		cx
+	
+	inc		di
+	cmp		ax,		11
+	je		bomb_checker
+
+	bomb_bomb_bomb:
 
 	mov		cx,		dx
 
@@ -693,7 +705,7 @@ randomizer_2281488			proc near
 	pop		bx
 	pop		ax
 	ret
-randomizer_2281488			endp
+randomizer			endp
 
 
 create_new_figure		proc near
@@ -718,18 +730,28 @@ create_new_figure		proc near
 	lodsw
 	dec		ax
 
+	cmp		ax,		11
+	je		bomb_has_been_planted
+
 	lea		si,		[figure_square]
 	add		si,		ax
 	add		si,		ax
 	mov		ax,		si
 	mov		bx,		08h
 	call	from_pattern
+	jmp		crtnw_ret
 
-	pop		bx
-	pop		ax
-	pop		di
-	pop		si
-	ret
+	bomb_has_been_planted:
+		lea		ax,		[figure_dot]
+		mov		bx,		08h
+		call	from_pattern
+
+	crtnw_ret:
+		pop		bx
+		pop		ax
+		pop		di
+		pop		si
+		ret
 create_new_figure		endp
 
 
@@ -1600,7 +1622,7 @@ color_choice endp
 
 draw_cur_pos proc near                       ; рисует текущую фигуру
         push    ax                           ; использует current_position и current_color
-        push    bx
+        push    bx                           ; и current_figure тоже
         push    cx
         push    dx
         push    es
@@ -1612,7 +1634,7 @@ draw_cur_pos proc near                       ; рисует текущую фи�
     _loop_cur_pos:              
         mov     ax,     [bx]
         cmp     ax,     0FFFFh
-        je      drcp_ret
+        je      _drcp_ret
 
         push    cx
         push    ax
@@ -1637,15 +1659,38 @@ draw_cur_pos proc near                       ; рисует текущую фи�
 
         call    color_choice            ; выбор цвета в отдельной ф-ции
                                         ; (иначе ругается на слишком длинные джампы)
+        push    ax
+        push    bx
+        lea     bx,     current_figure
+        mov     ax,     [bx]
+
+        cmp     ax,     12
+        je      _draw_bomb
+        jmp     _dr
+
+    _draw_bomb:
+        mov     al,     02h
+        mov     ah,     0Ch
+        mov     di,     cx
+        stosw
+        stosw
+        pop     bx
+        pop     ax
+        jmp     _pre_fin
+
+    _dr:
+        pop     bx
+        pop     ax
         mov     al,     0DBh
         mov     di,     cx
         stosw
         stosw
         
+    _pre_fin:
         pop     cx
         add     bx,     2
         loop    _loop_cur_pos
-    drcp_ret:
+    _drcp_ret:
         pop     si
         pop     di
         pop     es
@@ -1967,6 +2012,9 @@ draw_next_figure proc near          ; доп - рисует следующую �
         cmp     ax,     11
         je      _four_dots_next
 
+        cmp     ax,     12
+        je      _bomb_next
+
     _square_next:
         add     di,     164
         mov     ah,     ch
@@ -1992,7 +2040,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
 
     _two_dots_next:
         add     di,     164
-        add     ah,     ch
+        mov    ah,     ch
         mov     al,     0DBh
         stosw
         stosw
@@ -2002,7 +2050,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
 
     _three_dots_next:
         add     di,     162
-        add     ah,     ch
+        mov     ah,     ch
         mov     al,     0DBh
         stosw
         stosw
@@ -2014,7 +2062,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
 
     _triangle_next:
         add     di,     164
-        add     ah,     ch
+        mov     ah,     ch
         mov     al,     0DBh
         stosw
         stosw
@@ -2027,7 +2075,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
 
     _g_next:
         add     di,     164
-        add     ah,     ch
+        mov     ah,     ch
         mov     al,     0DBh
         stosw
         stosw
@@ -2043,7 +2091,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
 
     _back_g_next:
         add     di,     164
-        add     ah,     ch
+        mov     ah,     ch
         mov     al,     0DBh
         stosw
         stosw
@@ -2104,7 +2152,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
 
     _four_dots_next:
         add     di,     160
-        add     ah,     ch
+        mov     ah,     ch
         mov     al,     0DBh
         stosw
         stosw
@@ -2112,6 +2160,14 @@ draw_next_figure proc near          ; доп - рисует следующую �
         stosw
         stosw
         stosw
+        stosw
+        stosw
+        jmp     _next_fig_ret
+
+    _bomb_next:
+        add     di,     164
+        mov     al,     02h
+        mov     ah,     0Ch
         stosw
         stosw
         jmp     _next_fig_ret
@@ -2144,6 +2200,17 @@ integrate_figure	proc near				; changes game_field depending
 	push 	si
 	push 	di
 
+	lea		si,		[current_figure]
+	lodsb
+	cmp		al,		12
+	je		lolly_bomb
+	jmp		_ddddd
+
+	lolly_bomb:
+		call	clear_gamefield
+		jmp		_exitIntegrate
+
+	_ddddd:
 	lea 	bx, 	current_position		
 	mov 	ax, 	[bx]
 	cmp 	ax, 	0ffffh
@@ -2743,13 +2810,23 @@ shift_down     proc near    ; number of entire line in ax
   mov   ax,   0000h     ; make first str in game_field empty
   mov   [bx],   ax
 
+
+  lea	si,		[speed]
+  lodsb
+  mov	bl,		2
+  div	bl
+  mov	bx,		10
+  sub	bx,		ax
+  mov	cx,		bx
+
+
   lea   bx,   pointsBuf
   mov   ax,   [bx]
-  inc   ax
+  add	ax,		cx
   mov   [bx],   ax
   call   print_points
   cmp   ax,   999
-  jne   _shiftDownExit
+  jbe   _shiftDownExit
 
 _victory:
   lea   bx,   exit_flag
@@ -3704,7 +3781,7 @@ newGame     proc near
     mov     [bx],    ax
 
 	call	create_new_figure
-	call	randomizer_2281488
+	call	randomizer
 
     call  	ScreenClear
 	call  	draw_glass
@@ -3721,6 +3798,13 @@ newGame     proc near
 
     ccc:
 		hlt                    			;  Прерывание программное
+
+		lea    si,    [exit_flag]
+		lodsb
+		cmp    al,    0
+		jne    gogogo
+
+
 		mov    bx,   head
 		cmp    bx,   tail
 		jz    ccc                		;  Если указатели хвоста и головы совпали - штош, не повезло
@@ -3747,6 +3831,7 @@ newGame     proc near
 			cmp    al,    0
 			je    ccc
 
+	gogogo:
     call  restore_vectors
 
 	lea     bx,     exit_flag
@@ -4281,7 +4366,7 @@ print_si_string                endp
 
 
 begin:
-	call	randomizer_2281488
+	call	randomizer
 	call	chooser
 
 	_exit_game:
