@@ -2,6 +2,11 @@ model	tiny
 .386
 .data
 
+victory1       db      '!YOU`RE OUR NEW WINNER!'
+victory2       db      '!!!TRUE SIBERIAN VICTORY!!!'
+gameOver1      db      '!GAME OVER!'
+gameOver2      db      '!!!I KNOW YOU CAN DO IT BETTER!!!'
+
 menu1          db      '   /\       TTTTTT  EEEEEE  TTTTTT  RRRRR    IIIIII   SSSS  '; 23 698
 menu2          db      '  /||\        TT    EE        TT    RR   RR    II    SS   SS'; 38 844
 menu3          db      ' //||\\       TT    EEEEEE    TT    RR RR      II      S    '; 30, 1012
@@ -575,12 +580,14 @@ game_model			proc near
 		call	print_speed
 		jmp		gmmdl_ret
 	gm_new_game:
-	;	TODO
+		lea		di,		[exit_flag]	
+		mov		ax,		3
+		stosb
 		jmp		gmmdl_ret
 	gm_exit:
 		lea		di,		[exit_flag]	
-		mov		ax,		1
-		stosw
+		mov		ax,		2
+		stosb
 	gmmdl_ret:
 		pop		di
 		pop		si
@@ -3651,6 +3658,8 @@ newGame     proc near
     push    si
     push    di
 
+	_forNG:
+
     lea     bx,     pointsBuf
     mov     ax,     0
     mov     [bx],    ax
@@ -3739,6 +3748,47 @@ newGame     proc near
 
     call  restore_vectors
 
+	lea     bx,     exit_flag
+	mov     ax,     [bx]
+	cmp     al,     1
+	je      _printVictory
+	cmp     al,     2
+	je      _printGameOver
+	cmp		al,		3
+	je		_forNG
+	jmp     _toMenu
+
+	_printVictory:
+	mov     ax,     03h                 ; clear screen
+	int     10h
+	mov     si,     offset  victory1
+	mov     cx,     23
+	mov     di,     1338
+	call    print_si_string
+	mov     si,     offset  victory2
+	mov     cx,     27
+	mov     di,     1654
+	call    print_si_string
+	jmp     _toMenu
+
+	_printGameOver:
+	mov     ax,     03h                 ; clear screen
+	int     10h
+	mov     si,     offset  gameOver1
+	mov     cx,     11
+	mov     di,     1350
+	call    print_si_string
+	mov     si,     offset  gameOver2
+	mov     cx,     33
+	mov     di,     1648
+	call    print_si_string
+
+	_toMenu:
+		@@8:
+		xor     ah,     ah
+		int     16h
+		cmp     ah,     1
+		jne     @@8
     pop     di
     pop     si
     pop     es
@@ -3955,7 +4005,7 @@ chooser     proc near                   ; infinity cycle of changing
     jmp     @@3
 
 _progExit:
-    int     19h
+    jmp	_end_of_chooser
 
 _enter:
     lea     bx,     choice
@@ -3966,7 +4016,7 @@ _enter:
     je      _configurationEter
     cmp     ax,     3
     je      _captionsEnter
-    int     19h
+    jmp		_end_of_chooser
 
 _newGameEnter:                             ; if enter near new game
     call    newGame
@@ -4020,6 +4070,8 @@ _forOne:
     mov     ax,     1
     mov     [bx],   ax
     jmp     @@3
+
+_end_of_chooser:
 
     pop     di
     pop     si
@@ -4140,47 +4192,47 @@ print_conf      proc near                   ; print the configuration screen
 
     mov     si,     offset  conf1
     mov     cx,     40
-    mov     di,     0
+    mov     di,     1160 ; 1120
     call    print_si_string
 
     mov     si,     offset  conf2
     mov     cx,     27
-    mov     di,     160
+    mov     di,     1320
     call    print_si_string
 
     mov     si,     offset  conf3
     mov     cx,     16
-    mov     di,     320
+    mov     di,     1480
     call    print_si_string
 
     mov     si,     offset  conf4
     mov     cx,     17
-    mov     di,     480
+    mov     di,     1640
     call    print_si_string
 
     mov     si,     offset  conf5
     mov     cx,     27
-    mov     di,     640
+    mov     di,     1800
     call    print_si_string
 
     mov     si,     offset  conf6
     mov     cx,     38
-    mov     di,     800
+    mov     di,     1960
     call    print_si_string
 
     mov     si,     offset  conf7
     mov     cx,     46
-    mov     di,     960
+    mov     di,     2120
     call    print_si_string
 
     mov     si,     offset  conf8
     mov     cx,     26
-    mov     di,     1120
+    mov     di,     2280
     call    print_si_string
 
     mov     si,     offset  conf9
     mov     cx,     15
-    mov     di,     1280
+    mov     di,     2440
     call    print_si_string
 
     pop     di
@@ -4230,6 +4282,8 @@ print_si_string                endp
 begin:
 	call	randomizer_2281488
 	call	chooser
+
+	_exit_game:
 
     db 		0eah
     dw 		7c00h,		0
