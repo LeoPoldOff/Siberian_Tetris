@@ -740,7 +740,7 @@ stop_menu			proc near
 	je		stop_menu_ret
 
 	call	read_buf
-	cmp		al,		31							;	Если СТОП - то только по n выходим
+	cmp		al,		01Fh						;	Если СТОП - то только по n выходим
 	jne		stop_menu_ret
 	xor		ax,		ax
 	lea		di,		[pause]
@@ -1814,7 +1814,6 @@ clear_glass proc near                       ; чистит экран в пре�
     ret
 clear_glass endp
 
-
 draw_next_figure proc near          ; доп - рисует следующую фигуру
         push    ax                  ; справа от игрового поля
         push    bx                  ; использует next_figure и next_color
@@ -1849,6 +1848,49 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _draw_frame_3:
         stosw
         loop    _draw_frame_3
+
+
+    _draw_black:
+        sub     di,     660
+        mov     al,     0DBh
+        mov     ah,     00h
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        add     di,     144
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        add     di,     144
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        add     di,     144
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        stosw
+        sub     di,     496
+        jmp     _draw_figure_step_1
 
     _draw_figure_step_1:                    ; выбираем цвет
 
@@ -1895,7 +1937,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     
     _draw_figure_step_2:                        ; выбираем фигуру
 
-        sub     di,     660
+      ;  sub     di,     660
         lea     bx,     next_figure
         mov     ax,     [bx]
 
@@ -1935,7 +1977,8 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _square_next:
         add     di,     164
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
+        stosw
         stosw
         stosw
         stosw
@@ -2024,7 +2067,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _pyramid_next:
         add     di,     166
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
         stosw
         stosw
         add     di,     152
@@ -2039,7 +2082,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _s_next:
         add     di,     166
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
         stosw
         stosw
         stosw
@@ -2054,7 +2097,7 @@ draw_next_figure proc near          ; доп - рисует следующую �
     _back_s_next:
         add     di,     162
         mov     ah,     ch
-        mov     al,     0DBh
+        mov     al,     0DBh     ;02h - идеальный вариант
         stosw
         stosw
         stosw
@@ -2675,76 +2718,90 @@ _searchExit:
 	ret
 search_lines	endp
 
-shift_down 		proc near		; number of entire line in ax
-	push	ax
-	push 	bx
-	push 	cx
-	push 	dx
-	push 	ds
-	push 	es
-	push 	si
-	push 	di
+shift_down     proc near    ; number of entire line in ax
+  push  ax
+  push   bx
+  push   cx
+  push   dx
+  push   ds
+  push   es
+  push   si
+  push   di
 
 
-	; mov 	ax,		23			;<======== for testing
-	mov 	cx, 	ax
-	push 	cx					; loop number in to stack
-	mov 	bx, 	2
-	mul 	bx
+  ; mov   ax,    23      ;<======== for testing
+  mov   cx,   ax
+  push   cx          ; loop number in to stack
+  mov   bx,   2
+  mul   bx
 ; shift to entire line in massive in ax
-	lea 	bx, 	game_field
-	add 	bx, 	ax 			; link to entire line in bx
+  lea   bx,   game_field
+  add   bx,   ax       ; link to entire line in bx
 
-	pop 	cx
-	shiftLoop:					; move lines down one by one
-		mov 	ax, 	[bx - 2]
-		mov 	[bx], 	ax
-		dec 	bx
-		dec 	bx
-		loop 	shiftLoop
+  pop   cx
+  shiftLoop:          ; move lines down one by one
+    mov   ax,   [bx - 2]
+    mov   [bx],   ax
+    dec   bx
+    dec   bx
+    loop   shiftLoop
 
-	lea 	bx, 	game_field
-	mov 	ax, 	0000h 		; make first str in game_field empty
-	mov 	[bx], 	ax
+  lea   bx,   game_field
+  mov   ax,   0000h     ; make first str in game_field empty
+  mov   [bx],   ax
 
-	; mov 	ax, 	6			;<==== for testing
-	; call 	shift_down
-	; lea 	bx, 	game_field
-	; mov 	ax, 	[bx]		;<==== for testing
-	; mov 	ax, 	[bx + 2]
-	; mov 	ax, 	[bx + 4]
-	; mov 	ax, 	[bx + 6]
-	; mov 	ax, 	[bx + 8]
-	; mov 	ax, 	[bx + 10]
-	; mov 	ax, 	[bx + 12]
-	; mov 	ax, 	[bx + 14]
-	; mov 	ax, 	[bx + 16]
-	; mov 	ax, 	[bx + 18]
-	; mov 	ax, 	[bx + 20]		;<==== for testing
-	; mov 	ax, 	[bx + 22]
-	; mov 	ax, 	[bx + 24]
-	; mov 	ax, 	[bx + 26]
-	; mov 	ax, 	[bx + 28]
-	; mov 	ax, 	[bx + 30]
-	; mov 	ax, 	[bx + 32]
-	; mov 	ax, 	[bx + 34]
-	; mov 	ax, 	[bx + 36]
-	; mov 	ax, 	[bx + 38]	
-	; mov 	ax, 	[bx + 40]		;<==== for testing
-	; mov 	ax, 	[bx + 42]
-	; mov 	ax, 	[bx + 44]
-	; mov 	ax, 	[bx + 46]
+  lea   bx,   pointsBuf
+  mov   ax,   [bx]
+  inc   ax
+  mov   [bx],   ax
+  call   print_points
+  cmp   ax,   999
+  jne   _shiftDownExit
 
-	pop 	di
-	pop 	si
-	pop 	es
-	pop 	ds
-	pop 	dx
-	pop 	cx
-	pop 	bx
-	pop 	ax
-	ret
-shift_down 	endp
+_victory:
+  lea   bx,   exit_flag
+  mov   [bx],   1
+
+  ; mov   ax,   6      ;<==== for testing
+  ; call   shift_down
+  ; lea   bx,   game_field
+  ; mov   ax,   [bx]    ;<==== for testing
+  ; mov   ax,   [bx + 2]
+  ; mov   ax,   [bx + 4]
+  ; mov   ax,   [bx + 6]
+  ; mov   ax,   [bx + 8]
+  ; mov   ax,   [bx + 10]
+  ; mov   ax,   [bx + 12]
+  ; mov   ax,   [bx + 14]
+  ; mov   ax,   [bx + 16]
+  ; mov   ax,   [bx + 18]
+  ; mov   ax,   [bx + 20]    ;<==== for testing
+  ; mov   ax,   [bx + 22]
+  ; mov   ax,   [bx + 24]
+  ; mov   ax,   [bx + 26]
+  ; mov   ax,   [bx + 28]
+  ; mov   ax,   [bx + 30]
+  ; mov   ax,   [bx + 32]
+  ; mov   ax,   [bx + 34]
+  ; mov   ax,   [bx + 36]
+  ; mov   ax,   [bx + 38]  
+  ; mov   ax,   [bx + 40]    ;<==== for testing
+  ; mov   ax,   [bx + 42]
+  ; mov   ax,   [bx + 44]
+  ; mov   ax,   [bx + 46]
+
+_shiftDownExit:
+  pop   di
+  pop   si
+  pop   es
+  pop   ds
+  pop   dx
+  pop   cx
+  pop   bx
+  pop   ax
+  ret
+shift_down   endp
+
 
 get_position 	proc near 				; res, coordinates of up left 
 										; corner of current_position, in ax
@@ -3206,14 +3263,10 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	push 	es
 	push 	si
 	push 	di
-
-	; cld										; code to paint
-	; mov 	ax,		0b800h					; should be at least once in code
-	; mov		es, 	ax 						; make third video mode
-	; mov		di, 	0
-	; mov 	ah, 	00h
-	; mov 	al, 	03h
-	; int 	10h
+											; code to paint
+	mov 	ax,		0b800h					; should be at least once in code
+	mov		es, 	ax 						; make third video mode
+	mov		di, 	0
 	xor	ax, 	ax
 
 	mov		ah, 	0Eh
@@ -3275,6 +3328,8 @@ print_points 	proc near 			; num(not more than 999) in pointsBuf
 	push 	di
 
 	; mov 	ax, 	001		; <======= for testing
+	mov 	ax,		0b800h					; should be at least once in code
+	mov		es, 	ax
 	lea 	bx, 	pointsBuf
 	mov 	ax, 	[bx]
 	xor 	dx, 	dx
@@ -3312,54 +3367,72 @@ print_points 	proc near 			; num(not more than 999) in pointsBuf
 	ret
 print_points 	endp
 
-print_speed 	proc near 			; num(not more than 999) in speed
-	push 	ax
-	push 	bx						; print three-digit num from ax after "Speed:"
-	push 	cx
-	push 	dx
-	push 	ds
-	push 	es
-	push 	si
-	push 	di
 
-	; mov 	ax, 	300 		;<=== for testing
-	lea 	bx, 	speed
-	mov 	ax, 	[bx]
-	xor 	dx, 	dx
-	mov 	bx, 	10
-	div 	bx
-	push 	dx
-	xor 	dx, 	dx
-	mov 	bx, 	10
-	div 	bx
-	push 	dx
+print_speed   proc near       ; num(not more than 999) in speed
+  push   ax
+  push   bx            ; print three-digit num from ax after "Speed:"
+  push   cx
+  push   dx
+  push   ds
+  push   es
+  push   si
+  push   di
 
-	call 	int2str16onedigit
-	mov 	di, 	176
-	mov		ah, 	0eh
-	stosw
-	pop 	ax
-	call 	int2str16onedigit
-	mov 	di, 	178
-	mov		ah, 	0eh
-	stosw
-	pop 	ax
-	call 	int2str16onedigit
-	mov 	di, 	180
-	mov		ah, 	0eh
-	stosw
+  ; mov   ax,   300     ;<=== for testing
+  mov   ax,    0b800h          ; should be at least once in code
+  mov    es,   ax             ; make third video mode
+  mov    di,   0
+  lea   bx,   speed
+  mov   ax,   [bx]
+  xor   dx,   dx
+  mov   bx,   10
+  div   bx
+
+  lea   bx,   speed
+    mov   ax,   [bx]
+    xor   dx,   dx
+    mov   cx,   2
+    div   cx
+    mov   dx,   ax
+    mov   ax,   10
+    sub   ax,   dx
+
+  push   ax
+  xor   dx,   dx
+  mov   bx,   10
+  div   bx
+  mov   ax,   0
+  push   ax
+
+  mov   ax,   0
+
+  call   int2str16onedigit
+  mov   di,   176
+  mov    ah,   0eh
+  stosw
+  pop   ax
+  call   int2str16onedigit
+  mov   di,   178
+  mov    ah,   0eh
+  stosw
+  pop   ax
+  call   int2str16onedigit
+  mov   di,   180
+  mov    ah,   0eh
+  stosw
 
 
-	pop 	di
-	pop 	si
-	pop 	es
-	pop 	ds
-	pop 	dx
-	pop 	cx
-	pop 	bx
-	pop 	ax
-	ret
-print_speed 	endp
+  pop   di
+  pop   si
+  pop   es
+  pop   ds
+  pop   dx
+  pop   cx
+  pop   bx
+  pop   ax
+  ret
+print_speed   endp
+
 
 int2str16onedigit 	proc near 			; num in al, res in al
 	push 	bx							; make str view of digit
