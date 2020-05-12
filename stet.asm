@@ -32,10 +32,10 @@ game_field:
 	dw		0000h
 
 current_position:
-		dw		0000h
-		dw		0001h
-		dw		0002h
-		dw		0003h
+		dw		0170h
+		dw		0171h
+		dw		0172h
+		dw		0173h
 	
 saved_position:
 		dw		9999h
@@ -55,7 +55,7 @@ current_figure	dw 		11
 ; 9 - s
 ; 10 - back s
 ; 11 - four dots
-next_figure 	dw 		5
+next_figure 	dw 		11
 current_color	dw 		1
 ; 1 - red
 ; 2 - orange
@@ -560,6 +560,7 @@ down_shift			proc near
 	jne		dwnsft_ret
 
 	call	integrate_figure
+	call	search_lines
 	call	create_new_figure
 	;call	figure_color_generator
 
@@ -602,6 +603,7 @@ create_new_figure		proc near
 	dec		ax
 
 	lea		si,		[figure_square]
+	add		si,		ax
 	add		si,		ax
 	mov		ax,		si
 	mov		bx,		08h
@@ -3209,11 +3211,6 @@ begin:
 			jne		ccc
 
 	call	restore_vectors
-
-	;lea		ax,		[current_figure]
-	;lea		ax,		[current_position]
-	;call 	create_new_figure
-
 
     db 		0eah
     dw 		7c00h,		0
