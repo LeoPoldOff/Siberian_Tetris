@@ -164,8 +164,6 @@ table_figures:
 		tail	dw		offset buf
 	
 	exit_flag	db		0
-		
-	old9	dw		0,	 0
 	tick	db	0
 	pause	db	0
 	speed	db	008h
@@ -321,6 +319,7 @@ int9 proc near								;	Предположительно здесь лежит �
 	pop	ax
 	iret									;	Возврат из прерывания при 16-битном размере операнда 
 int9 endp
+old9	dw		0,	 0
 
 
 int8	proc near							;	Модифицируем обработчик прерывания на таймере
@@ -2760,7 +2759,8 @@ shift_down     proc near    ; number of entire line in ax
 
 _victory:
   lea   bx,   exit_flag
-  mov   [bx],   1
+  mov	ax,		2
+  mov   [bx],   ax
 
   ; mov   ax,   6      ;<==== for testing
   ; call   shift_down
@@ -3679,15 +3679,7 @@ newGame     proc near
     mov     ax,     0
     mov     [bx],    ax
 
-    lea     bx,     next_figure
-    mov     ax,     0
-    mov     [bx],    ax
-
     lea     bx,     current_color
-    mov     ax,     0
-    mov     [bx],    ax
-
-    lea     bx,     next_color
     mov     ax,     0
     mov     [bx],    ax
 
@@ -3715,7 +3707,6 @@ newGame     proc near
     mov     ax,     10
     mov     [bx],    ax
 
-	call	randomizer_2281488
 	call	create_new_figure
 	call	randomizer_2281488
 
@@ -3726,21 +3717,25 @@ newGame     proc near
 	call	print_speed
     call  	draw_field_and_cur_pos
 	call	draw_next_figure
+
     call   	change_vectors
 
     push  cs
-    pop    ds  
+    pop    ds 
+
     ccc:
-      hlt                    ;  Прерывание программное
-      mov    bx,   head
-      cmp    bx,   tail
-      jz    ccc                ;  Если указатели хвоста и головы совпали - штош, не повезло
-      call  read_buf            ;  Читаем информацию из буфера
-      call  game_model
-      lea    si,    [exit_flag]
-      lodsw
-      cmp    ax,    1
-      jne    ccc
+		hlt                    		;  Прерывание программное
+		mov    bx,   head
+		cmp    bx,   tail
+		jz    ccc                		;  Если указатели хвоста и головы совпали - штош, не повезло
+		call  read_buf            	;  Читаем информацию из буфера
+		call  game_model
+
+		lea    si,    [exit_flag]
+		lodsb
+
+		cmp    al,    0
+		je    ccc
 
     call  restore_vectors
 
@@ -3974,8 +3969,6 @@ _enter:
     int     19h
 
 _newGameEnter:                             ; if enter near new game
-    ; mov     ax,     03h
-    ; int     10h
     call    newGame
     jmp     @@3
 
@@ -4235,6 +4228,7 @@ print_si_string                endp
 
 
 begin:
+	call	randomizer_2281488
 	call	chooser
 
     db 		0eah
