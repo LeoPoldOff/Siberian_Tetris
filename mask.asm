@@ -6,7 +6,7 @@ output_msg      	db      '54321'
 
 pointsBuf 			dw 		7
 
-speedBuf 			dw 		300
+speed 			dw 		300
 
 game_field:
 	dw		0000h
@@ -32,13 +32,13 @@ game_field:
 	dw		0ffffh
 	dw		1111h
 	dw		2222h
-	dw		3333h
+	dw		0000h
 
 current_position:
-		dw		0000h
-		dw		0010h
-		dw		0020h
-		dw		0030h
+			dw    0170h
+    		dw    0171h
+    		dw    0172h
+    		dw    0173h
 	
 saved_position:
 		dw		9999h
@@ -136,6 +136,10 @@ integrate_figure	proc near				; changes game_field depending
 	push 	bx
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	lea 	bx, 	current_position		
 	mov 	ax, 	[bx]
@@ -288,6 +292,10 @@ _nextCurrent2:									; fourth current_position, the same work
 		mov 	[bx], 	cx
 		mov 	ax, 	[bx]
 
+		pop 	di
+		pop 	si
+		pop 	es
+		pop 	ds
 		pop 	dx
 		pop 	cx
 		pop 	bx
@@ -306,6 +314,10 @@ _nextCurrent2:									; fourth current_position, the same work
 		loop 	strLoop3
 
 _exitIntegrate:
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -315,9 +327,13 @@ _exitIntegrate:
 integrate_figure	endp
 
 rotate_figure 	proc near 						; rotate current figure
-	push 	bx
+	push 	bx									; rotate side in ax
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	mov 	bx, 	ax
 	call 	saved_configuration
@@ -372,6 +388,10 @@ _ch:
 	cmp 	ax, 	1
 	je 		_rollbackRotate
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -381,6 +401,10 @@ _ch:
 _rollbackRotate:								; rollback rotate from save
 	call 	restore_configuration
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -392,6 +416,10 @@ can_here		proc near 			; res like 1 or 0 in ax
 	push 	bx						; res asks "can we draw current without crossing walls?"
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	call 	get_position			; taking data
 	mov 	bx, 	10h
@@ -594,6 +622,10 @@ _fourDots24:
 
 _true:
 	mov 	ax, 	1
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -601,17 +633,26 @@ _true:
 
 _false:
 	mov 	ax, 	0
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
 	ret
 can_here		endp
 
-search_lines	proc near
+search_lines	proc near 				; search and deleting entire lines
 	push 	ax
 	push 	bx
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
+
 
 	lea 	bx,		game_field		; link to game_field in bx
 	mov 	cx, 	24				; num of loops
@@ -658,6 +699,10 @@ _searchExit:
 	; mov 	ax, 	[bx + 44]
 	; mov 	ax, 	[bx + 46]
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -670,6 +715,11 @@ shift_down 		proc near		; number of entire line in ax
 	push 	bx
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
+
 
 	; mov 	ax,		23			;<======== for testing
 	mov 	cx, 	ax
@@ -691,6 +741,12 @@ shift_down 		proc near		; number of entire line in ax
 	lea 	bx, 	game_field
 	mov 	ax, 	0000h 		; make first str in game_field empty
 	mov 	[bx], 	ax
+
+	lea 	bx, 	pointsBuf
+	mov 	ax, 	[bx]
+	inc 	ax
+	mov 	[bx], 	ax
+	call 	print_points
 
 	; mov 	ax, 	6			;<==== for testing
 	; call 	shift_down
@@ -720,6 +776,10 @@ shift_down 		proc near		; number of entire line in ax
 	; mov 	ax, 	[bx + 44]
 	; mov 	ax, 	[bx + 46]
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -732,6 +792,10 @@ get_position 	proc near 				; res, coordinates of up left
 	push 	bx
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	lea 	bx, 	current_position	; link to current_position
 	mov 	ax, 	[bx]
@@ -845,6 +909,10 @@ _result:
 	add 	ax, 	bx
 ; coordinates of up left corner in aax
 	
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds	
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -854,6 +922,10 @@ get_position 	endp
 restore_configuration 	proc near			; transport saved position & rotate
 	push 	ax								;to current position and rotate
 	push 	bx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	lea 	bx, 	saved_position			; link to saved_position in bx
 
@@ -891,7 +963,10 @@ restore_configuration 	proc near			; transport saved position & rotate
 	; lea 	bx, 	current_rotate
 	; mov 	ax, 	[bx]              		;<==== testing
 
-
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	bx
 	pop 	ax
 	ret
@@ -900,6 +975,10 @@ restore_configuration 	endp
 saved_configuration 	proc near 			; transport current position & rotate
 	push 	ax								; to saved position and rotate
 	push 	bx								; the same as restore_configuration but on the other side
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	lea 	bx, 	current_position
 
@@ -936,6 +1015,10 @@ saved_configuration 	proc near 			; transport current position & rotate
 	; lea 	bx, 	saved_rotate
 	; mov 	ax, 	[bx]            		;<==== testing
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	bx
 	pop 	ax
 	ret
@@ -945,7 +1028,10 @@ clear_screen 	proc near 					; clean game_field
 	push 	ax
 	push 	bx
 	push 	cx
+	push 	ds
+	push 	es
 	push 	si
+	push 	di
 
 	lea 	bx, 	game_field				; link to game_field in bx
 	mov 	ax, 	0000h 					; empty str in ax
@@ -965,7 +1051,10 @@ clear_screen 	proc near 					; clean game_field
 	; 	inc bx
 	; 	loop loopx		;<=================== for testing in begin
 
+	pop 	di
 	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	cx
 	pop 	bx
 	pop 	ax
@@ -981,6 +1070,7 @@ calculate_configuration 	proc near
     push    es
     push    di
     push    si
+    push 	ds
     
 	
 	lea 	bx, 	current_figure
@@ -1138,6 +1228,7 @@ _left:										; if left rotate
 	je 	_ret
 
 _ret:
+	pop 	ds 		
 	pop		si
     pop    	di
     pop     es
@@ -1152,6 +1243,10 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	push 	bx
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	cld										; code to paint
 	mov 	ax,		0b800h					; should be at least once in code
@@ -1199,6 +1294,10 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 	mov 	al, 	030h
 	stosw
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -1207,9 +1306,14 @@ print_mask 	proc near						; print "Speed:" & "Points:" in up left corner
 print_mask endp
 
 print_points 	proc near 			; num(not more than 999) in pointsBuf
+	push 	ax
 	push 	bx						; print three-digit num from ax after "Points:"
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	; mov 	ax, 	001		; <======= for testing
 	lea 	bx, 	pointsBuf
@@ -1238,19 +1342,29 @@ print_points 	proc near 			; num(not more than 999) in pointsBuf
 	mov		ah, 	0eh
 	stosw
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
+	pop 	ax
 	ret
 print_points 	endp
 
 print_speed 	proc near 			; num(not more than 999) in speed
+	push 	ax
 	push 	bx						; print three-digit num from ax after "Speed:"
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	; mov 	ax, 	300 		;<=== for testing
-	lea 	bx, 	speedBuf
+	lea 	bx, 	speed
 	mov 	ax, 	[bx]
 	xor 	dx, 	dx
 	mov 	bx, 	10
@@ -1276,9 +1390,15 @@ print_speed 	proc near 			; num(not more than 999) in speed
 	mov		ah, 	0eh
 	stosw
 
+
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
+	pop 	ax
 	ret
 print_speed 	endp
 
@@ -1286,6 +1406,10 @@ int2str16onedigit 	proc near 			; num in al, res in al
 	push 	bx							; make str view of digit
 	push 	cx
 	push 	dx
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 
 	mov 	cl, 	al
 	mov 	dl, 	al
@@ -1307,6 +1431,10 @@ int2str16onedigit 	proc near 			; num in al, res in al
 @@7:
 	mov 	al, 	dl
 
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	pop 	dx
 	pop 	cx
 	pop 	bx
@@ -1319,6 +1447,7 @@ print_string	proc near
     push    es
     push    di
     push    si
+    push 	ds
 
     mov     ax,     0b800h
     mov     es,     ax
@@ -1334,6 +1463,7 @@ print_string	proc near
         stosw
         loop loop_1
 
+    pop 	ds
     pop     si
     pop     di
     pop     es
@@ -1349,6 +1479,7 @@ num2buf proc near 						; num in ax, res in output_msg
     push    es
     push    di
     push    si
+    push 	ds
 
     mov     si,     offset output_msg	; you can change buffer
     mov 	cx, 	5					; you can change how many digits to print
@@ -1379,6 +1510,7 @@ _continuenum2buf:
 	pop 	ax 							; delete if less than 5
 	mov		[si + 4],	ax 				; delete if less than 5
 
+	pop 	ds
     pop     si
     pop     di
     pop     es
@@ -1389,6 +1521,10 @@ _continuenum2buf:
 num2buf 	endp
 
 figure_color_generator 	proc near			; make new figure num in next_figure
+	push 	ds
+	push 	es
+	push 	si
+	push 	di
 	push 	ax
 	push 	bx
 	push 	cx
@@ -1464,6 +1600,10 @@ _changingColor:						; put to next_figure
 	pop 	cx
 	pop 	bx
 	pop 	ax
+	pop 	di
+	pop 	si
+	pop 	es
+	pop 	ds
 	ret
 figure_color_generator	endp
 
@@ -1477,9 +1617,7 @@ begin 	proc near
 	int 	10h
 	xor		ax, 	ax
 
-	call 	print_mask
-	call 	print_points
-	call 	print_speed
+
 
 @@2:
 	xor		ah,		ah
