@@ -182,99 +182,99 @@ newGame     proc near
     push    si
     push    di
 
-    lea     bx,     pointsBuf
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     pointsBuf
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     choice
-    mov     ax,     1
-    mov     [bx],    ax
+    ; lea     bx,     choice
+    ; mov     ax,     1
+    ; mov     [bx],    ax
 
-    call    clear_gamefield
+    ; call    clear_gamefield
 
-    lea     bx,     current_position
-    mov     ax,     0000h
-    mov     [bx],   ax
-    mov     [bx + 2], ax
-    mov     [bx + 4], ax
-    mov     [bx + 6], ax
+    ; lea     bx,     current_position
+    ; mov     ax,     0000h
+    ; mov     [bx],   ax
+    ; mov     [bx + 2], ax
+    ; mov     [bx + 4], ax
+    ; mov     [bx + 6], ax
 
-    lea     bx,     saved_position
-    mov     ax,     0000h
-    mov     [bx],   ax
-    mov     [bx + 2], ax
-    mov     [bx + 4], ax
-    mov     [bx + 6], ax
+    ; lea     bx,     saved_position
+    ; mov     ax,     0000h
+    ; mov     [bx],   ax
+    ; mov     [bx + 2], ax
+    ; mov     [bx + 4], ax
+    ; mov     [bx + 6], ax
 
-    lea     bx,     current_figure
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     current_figure
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     next_figure
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     next_figure
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     current_color
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     current_color
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     next_color
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     next_color
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     current_rotate
-    mov     ax,     1
-    mov     [bx],    ax
+    ; lea     bx,     current_rotate
+    ; mov     ax,     1
+    ; mov     [bx],    ax
 
-    lea     bx,     saved_rotate
-    mov     ax,     1
-    mov     [bx],    ax
+    ; lea     bx,     saved_rotate
+    ; mov     ax,     1
+    ; mov     [bx],    ax
 
-    lea     bx,     theend
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     theend
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     buf
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     buf
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     exit_flag
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     exit_flag
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     tick
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     tick
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     pause
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     pause
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
-    lea     bx,     speed
-    mov     ax,     0
-    mov     [bx],    ax
+    ; lea     bx,     speed
+    ; mov     ax,     0
+    ; mov     [bx],    ax
 
 
-    call  ScreenClear
-    call  draw_glass
-    call  draw_field_and_cur_pos
-    call   change_vectors
+    ; call  ScreenClear
+    ; call  draw_glass
+    ; call  draw_field_and_cur_pos
+    ; call   change_vectors
 
-    push  cs
-    pop    ds  
-    ccc:
-      hlt                    ;  Прерывание программное
-      mov    bx,   head
-      cmp    bx,   tail
-      jz    ccc                ;  Если указатели хвоста и головы совпали - штош, не повезло
-      call  read_buf            ;  Читаем информацию из буфера
-      call  game_model
-      lea    si,    [exit_flag]
-      lodsw
-      cmp    ax,    1
-      jne    ccc
+    ; push  cs
+    ; pop    ds  
+    ; ccc:
+    ;   hlt                    ;  Прерывание программное
+    ;   mov    bx,   head
+    ;   cmp    bx,   tail
+    ;   jz    ccc                ;  Если указатели хвоста и головы совпали - штош, не повезло
+    ;   call  read_buf            ;  Читаем информацию из буфера
+    ;   call  game_model
+    ;   lea    si,    [exit_flag]
+    ;   lodsw
+    ;   cmp    ax,    1
+    ;   jne    ccc
 
-    call  restore_vectors
+    ; call  restore_vectors
 
     pop     di
     pop     si
@@ -679,47 +679,47 @@ print_conf      proc near                   ; print the configuration screen
 
     mov     si,     offset  conf1
     mov     cx,     40
-    mov     di,     0
+    mov     di,     1160 ; 1120
     call    print_si_string
 
     mov     si,     offset  conf2
     mov     cx,     27
-    mov     di,     160
+    mov     di,     1320
     call    print_si_string
 
     mov     si,     offset  conf3
     mov     cx,     16
-    mov     di,     320
+    mov     di,     1480
     call    print_si_string
 
     mov     si,     offset  conf4
     mov     cx,     17
-    mov     di,     480
+    mov     di,     1640
     call    print_si_string
 
     mov     si,     offset  conf5
     mov     cx,     27
-    mov     di,     640
+    mov     di,     1800
     call    print_si_string
 
     mov     si,     offset  conf6
     mov     cx,     38
-    mov     di,     800
+    mov     di,     1960
     call    print_si_string
 
     mov     si,     offset  conf7
     mov     cx,     46
-    mov     di,     960
+    mov     di,     2120
     call    print_si_string
 
     mov     si,     offset  conf8
     mov     cx,     26
-    mov     di,     1120
+    mov     di,     2280
     call    print_si_string
 
     mov     si,     offset  conf9
     mov     cx,     15
-    mov     di,     1280
+    mov     di,     2440
     call    print_si_string
 
     pop     di
