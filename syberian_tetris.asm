@@ -172,6 +172,7 @@ table_figures:
 	tick	db	0
 	pause	db	0
 	speed	db	008h
+	bomb_counter	db		0
 
 .code
 org	100h
@@ -490,26 +491,22 @@ game_model			proc near
 		jmp		gmmdl_ret
 
 	gm_move_up:
-		mov		ax,		3
-		call	move_figure
+		call	move_up
 		call	draw_field_and_cur_pos
 		jmp		gmmdl_ret
 
 	gm_move_left:
-		mov		ax,		1
-		call	move_figure
+		call	move_left
 		call	draw_field_and_cur_pos
 		jmp		gmmdl_ret
 
 	gm_move_down:
-		mov		ax,		0
-		call	move_figure
+		call	move_down
 		call	draw_field_and_cur_pos
 		jmp		gmmdl_ret
 
 	gm_move_right:
-		mov		ax,		2
-		call	move_figure
+		call	move_right
 		call	draw_field_and_cur_pos
 		jmp		gmmdl_ret
 
@@ -563,30 +560,40 @@ game_model			proc near
 		jmp		gmmdl_ret
 
 	gm_speed_minus:
+		xor		ax,		ax
 		lea		si,		[speed]
 		lodsb
 
-		dec		ax
-		dec		ax
+		cmp		ax,		18
+		je		gm_speed_minus_print
+
+		inc		ax
+		inc		ax
 
 		lea		di,		[speed]
 		stosb
 
-		call	print_speed
-		jmp		gmmdl_ret
+		gm_speed_minus_print:
+			call	print_speed
+			jmp		gmmdl_ret
 
 	gm_speed_plus:
+		xor		ax,		ax
 		lea		si,		[speed]
 		lodsb
+		
+		cmp		ax,		2
+		je		gm_speed_plus_print
 
-		inc		ax
-		inc		ax
+		dec		ax
+		dec		ax
 
 		lea		di,		[speed]
 		stosb
 
-		call	print_speed
-		jmp		gmmdl_ret
+		gm_speed_plus_print:
+			call	print_speed
+			jmp		gmmdl_ret
 	gm_new_game:
 		lea		di,		[exit_flag]	
 		mov		ax,		3
@@ -611,14 +618,17 @@ down_shift			proc near
 	push	cx
 	push	si
 
+	
 	call	move_down
 
+	cli
 	lea		si,		[current_position]
 	lodsw
 	mov		bx,		ax
 
 	lea		si,		[saved_position]
 	lodsw
+	sti
 
 	cmp		ax,		bx
 	jne		dwnsft_ret
@@ -659,11 +669,6 @@ randomizer			proc near
 	push	di
 	push	dx
 
-	mov		di,		0
-	
-	bomb_checker:
-	cmp		di,		3
-	je		bomb_bomb_bomb
 
 	mov		ax,		0
 	int		1ah
@@ -675,9 +680,27 @@ randomizer			proc near
 	mov		cx,		12					;	Получаем фигуру
 	div		cx
 	
-	inc		di
-	cmp		ax,		11
-	je		bomb_checker
+	cmp		dx,		11
+	jne		bomb_bomb_bomb
+
+	xor		ax,		ax
+	lea		si,		[bomb_counter]		;	Не хотим часто видеть бомбу
+	lodsb
+
+	cmp		ax,		2					;	Всё-таки бомба
+	je		next_bomb
+
+	lea		di,		[bomb_counter]		;	Будет точка, но учтём, что бомба нам уже выпадала
+	inc		ax
+	stosb
+
+	mov		dx,		1
+	jmp		bomb_bomb_bomb
+
+	next_bomb:							;	Бомбе быть. Обнулим счётчик.
+		xor		ax,		ax
+		lea		di,		[bomb_counter]
+		stosb
 
 	bomb_bomb_bomb:
 
@@ -1129,37 +1152,6 @@ from_pattern			proc near
 		ret
 from_pattern			endp
 
-
-
-; | input
-; ax - direction
-; 0 = down, 1 = left, 2 = right, 3 = up
-; | outpit
-; change current_position
-move_figure				proc near
-	cmp		ax,		0							;	case-switch блок
-	je		mvdwn
-	cmp		ax,		1
-	je		mvlft
-	cmp		ax,		2
-	je		mvrght
-	cmp		ax,		3
-	je		mvup
-
-	mvdwn:										;	Вызов соответствующих функций
-		call	move_down
-		jmp		mvfgr
-	mvlft:
-		call	move_left
-		jmp		mvfgr
-	mvrght:
-		call	move_right
-		jmp		mvfgr
-	mvup:
-		call	move_up
-	mvfgr:
-		ret
-move_figure				endp
 
 
 ; | input
